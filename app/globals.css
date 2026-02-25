@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg:       #f9f8f6;
+  --bg2:      #f2f0ec;
+  --surface:  #ffffff;
+  --border:   #e4e1db;
+  --border2:  #d0ccc4;
+  --ink:      #18180f;
+  --ink2:     #3a3830;
+  --muted:    #8a8680;
+  --accent:   #1a1a1a;
+  --gold:     #c4952a;
+  --gold-bg:  #fdf6e7;
+  --red:      #c94040;
+  --green:    #2d7a4a;
+  --green-bg: #edf7f1;
+  --radius:   10px;
+}
+
+html { font-size: 16px; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
