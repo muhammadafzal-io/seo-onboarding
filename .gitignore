@@ -46,7 +46,7 @@ Thumbs.db
 
 # Build outputs of npm packages
 dist/
-lib/
+
 *.tsbuildinfo
 
 # Optional lock files if you want to avoid conflicts
