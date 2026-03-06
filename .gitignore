@@ -50,6 +50,6 @@ lib/
 *.tsbuildinfo
 
 # Optional lock files if you want to avoid conflicts
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
