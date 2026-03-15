@@ -79,13 +79,13 @@ export async function submitOnboarding(formData: FormData) {
     .split(',')
     .map((k: string) => k.trim().toLowerCase())
     .filter((k: string) => k.length > 0)
-    .reverse()   // LIFO
+  //.reverse()   // LIFO
 
   if (keywordList.length === 0) {
     return { success: false, error: 'Please enter at least one keyword.' }
   }
-
-  console.log('keywordList', keywordList)
+  console.log('keywords', keywords)
+  console.log('keywordList', keywordList,)
   // ── 3. Group keywords into batches of 3 ───────────────────
   // Each batch  → 1 row in articles table
   // Each keyword → 1 row in keywords table linked to that article
