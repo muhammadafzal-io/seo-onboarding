@@ -209,7 +209,7 @@ export default function OnboardingForm({
                           <span style={{ fontFamily: 'var(--serif)', fontSize: 16, color: '#fff' }}>✦</span>
                       </div>
                       <div>
-                          <div style={{ fontFamily: 'var(--serif)', fontSize: 16, fontWeight: 400, color: 'var(--ink)', letterSpacing: '-0.02em' }}>The Brief</div>
+                          <div style={{ fontFamily: 'var(--serif)', fontSize: 16, fontWeight: 400, color: 'var(--ink)', letterSpacing: '-0.02em' }}>The Swarm</div>
                           <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted-2)', letterSpacing: '0.08em' }}>SEO PLATFORM</div>
                       </div>
           </div>

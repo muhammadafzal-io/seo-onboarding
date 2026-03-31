@@ -46,7 +46,7 @@ p{font-size:14px;color:#8e8ea0;line-height:1.7;margin-bottom:14px}
 </style></head><body><div class="w">
 <div class="hd"><div class="ic">✦</div><div><div class="nm">SEO Swarm</div><div class="sb">SEO Platform</div></div></div>
 <div class="bd">${content}</div>
-<div class="ft"><p>Automated message from The Brief SEO Platform. Do not reply.</p></div>
+<div class="ft"><p>Automated message from The Swarm SEO Platform. Do not reply.</p></div>
 </div></body></html>`
 }
 

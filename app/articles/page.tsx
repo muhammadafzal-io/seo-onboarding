@@ -21,7 +21,7 @@ function Badge({ status }: { status: string }) {
   }
   const cfg = map[status.toLowerCase()] || { bg: '#2a2a2a', color: '#8e8ea0' }
   return (
-    <span style={{ display: 'inline-flex', padding: '2px 8px', borderRadius: 5, fontSize: 11, fontWeight: 500, fontFamily: 'monospace', background: cfg.bg, color: cfg.color }}>
+    <span style={{ display: 'inline-flex', padding: '2px 8px', borderRadius: 0, fontSize: 11, fontWeight: 500, fontFamily: 'monospace', background: cfg.bg, color: cfg.color }}>
       {status}
     </span>
   )
@@ -55,13 +55,44 @@ export default function ArticlesPage() {
 
   const fetchData = useCallback(async () => {
     setLoading(true)
+
+    // --- FIX: Search by client name using a two-step approach ---
+    // Supabase .or() only works on the primary table's columns.
+    // To search by client name, we first find matching client IDs,
+    // then include client_id.in.(...) in the .or() filter.
+    let matchingClientIds: number[] = []
+
+    if (search.trim()) {
+      const { data: matchedClients } = await sb
+        .from('clients')
+        .select('id')
+        .ilike('name', `%${search.trim()}%`)
+
+      if (matchedClients && matchedClients.length > 0) {
+        matchingClientIds = matchedClients.map((c: any) => c.id)
+      }
+    }
+
     let q = sb.from('articles')
       .select('id, keyword, meta_title, status, target_word_count, content_type, updated_at, wp_url, clients(name, domain)', { count: 'exact' })
       .order('updated_at', { ascending: false })
       .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
 
     if (status !== 'All') q = q.eq('status', status.toLowerCase())
-    if (search.trim())    q = q.or(`keyword.ilike.%${search}%,meta_title.ilike.%${search}%`)
+
+    if (search.trim()) {
+      // Build the OR filter including keyword, meta_title, and matching client IDs
+      const orParts = [
+        `keyword.ilike.%${search.trim()}%`,
+        `meta_title.ilike.%${search.trim()}%`,
+      ]
+
+      if (matchingClientIds.length > 0) {
+        orParts.push(`client_id.in.(${matchingClientIds.join(',')})`)
+      }
+
+      q = q.or(orParts.join(','))
+    }
 
     const { data, count } = await q
     setArticles(data || [])
@@ -92,6 +123,7 @@ export default function ArticlesPage() {
   return (
     <Layout title=' Articles' >
       <Card>
+
           <div style={styles.page}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         {/* Header */}
@@ -115,7 +147,7 @@ export default function ArticlesPage() {
             <input
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1) }}
-              placeholder="Search keyword, title..."
+                  placeholder="Search keyword, title, or client name..."
               style={{ ...styles.inp, flex: 1, minWidth: 200 }}
             />
             {STATUSES.map(s => (
@@ -151,7 +183,7 @@ export default function ArticlesPage() {
                     return (
                       <tr key={row.id} style={{ cursor: 'default' }}>
                         <td style={{ ...styles.td, color: '#6b6b7b', fontFamily: 'monospace', fontSize: 11 }}>#{row.id}</td>
-                        <td style={{ ...styles.td, color: '#ececec', fontWeight: 500 }}>{client?.domain || '—'}</td>
+                        <td style={{ ...styles.td, color: '#ececec', fontWeight: 500 }}>{client?.name || client?.domain || '—'}</td>
                         <td style={{ ...styles.td, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.keyword}</td>
                         <td style={styles.td}><Badge status={row.status} /></td>
                         <td style={{ ...styles.td, fontFamily: 'monospace', fontSize: 12 }}>{(row.target_word_count || 0).toLocaleString()}</td>
@@ -187,6 +219,7 @@ export default function ArticlesPage() {
       </div>
     </div>
       </Card>
+
 
     </Layout>
   

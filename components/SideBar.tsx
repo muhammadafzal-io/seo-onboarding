@@ -1,13 +1,16 @@
+
 'use client'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 
 const NAV = [
   { href: '/dashboard',  label: 'Dashboard',  icon: '⊞' },
+  { href: '/client', label: 'Client', icon: '⚙' },
   { href: '/articles',   label: 'Articles',   icon: '◈' },
   { href: '/keywords',   label: 'Keywords',   icon: '◇' },
   { href: '/',           label: 'Onboarding', icon: '✦', badge: 'NOW' },
   { href: '/settings',   label: 'Settings',   icon: '⚙' },
+
 ]
 
 export default function Sidebar({ open }: { open: boolean }) {
@@ -22,7 +25,7 @@ export default function Sidebar({ open }: { open: boolean }) {
       <div style={{ display:'flex', alignItems:'center', gap:10, padding:'0 4px', marginBottom:28 }}>
         <div style={{ width:34, height:34, borderRadius:8, background:'var(--acc)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, flexShrink:0 }}>✦</div>
         <div>
-          <div style={{ fontSize:15, fontWeight:600, color:'var(--t1)', letterSpacing:'-0.01em' }}>The Brief</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--t1)', letterSpacing: '-0.01em' }}>The Swarm</div>
           <div style={{ fontSize:9, color:'var(--t3)', fontFamily:'var(--mono)', letterSpacing:'0.1em' }}>SEO PLATFORM</div>
         </div>
       </div>

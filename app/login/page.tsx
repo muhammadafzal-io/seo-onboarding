@@ -92,7 +92,7 @@ export default function AuthPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'center', 
             fontSize: 24, margin: '0 auto 16px', color: '#fff', boxShadow: '0 8px 16px rgba(16,163,127,0.2)' 
           }}>✦</div>
-          <h1 style={{ fontFamily: 'var(--serif)', fontSize: '32px', fontWeight: 300, letterSpacing: '-0.03em' }}>The Brief</h1>
+          <h1 style={{ fontFamily: 'var(--serif)', fontSize: '32px', fontWeight: 300, letterSpacing: '-0.03em' }}>The Swarm</h1>
           <p style={{ color: 'var(--t3)', fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: '6px' }}>SEO Automation Pipeline</p>
         </div>
 
