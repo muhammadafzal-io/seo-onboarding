@@ -5,9 +5,11 @@ import Sidebar from './SideBar';
 
 export default function Layout({ children, title }: { children: React.ReactNode; title: string }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
         :root{
@@ -32,9 +34,11 @@ export default function Layout({ children, title }: { children: React.ReactNode;
           .overlay.open{display:block}
           .main-shift{margin-left:0!important}
         }
-      `}</style>
+      ` }} />
+
       <div onClick={() => setSidebarOpen(false)} className={`overlay${sidebarOpen ? ' open' : ''}`} />
       <Sidebar open={sidebarOpen} />
+
       <div className="main-shift" style={{ marginLeft: 220, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <Header title={title} onMenuClick={() => setSidebarOpen(o => !o)} />
         <main style={{ flex: 1, padding: 24, overflowX: 'hidden' }}>{children}</main>

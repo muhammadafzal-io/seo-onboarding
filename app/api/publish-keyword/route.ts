@@ -10,7 +10,7 @@ const supabase = createClient(
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    console.log("📥 API received:", body)  // ← debug log
+
 
     const {
       keyword_id,
@@ -113,44 +113,63 @@ export async function POST(req: NextRequest) {
       .single()
 
     // ── 4. Fire WF2 webhook ───────────────────────────────────
-    const wf2WebhookUrl = process.env.WF2_WEBHOOK_URL
+    //const wf2WebhookUrl = process.env.WF2_WEBHOOK_URL
+    // ── 4. Fire WF2 webhook ───────────────────────────────────
+    // Use Type Assertion to fix the ts(2339) error
+    const wf2WebhookUrl = (process.env as any).WF2_WEBHOOK_URL as string;
+
     if (!wf2WebhookUrl) {
-      console.warn('[publish-keyword] WF2_WEBHOOK_URL not set — skipping webhook')
+      console.warn('[publish-keyword] WF2_WEBHOOK_URL not set — skipping webhook');
     } else {
       const webhookPayload = {
-        article_id:        resolvedArticleId,
-        keyword_id,
-        client_id,
-        primary_keyword:   main_keyword,
-        selected_keywords,
-        all_keywords,
-        image_prompt:      imagePrompt,
-        target_word_count: article?.target_word_count || 1500,
-        target_audience:   article?.target_audience   || 'general audience',
-        content_type:      article?.content_type      || 'blog_post',
-        language:          article?.language          || 'en',
-        client_name:       client?.name              || '',
-        client_domain:     client?.domain            || '',
-        client_niche:      client?.niche             || '',
-        client_tone:       client?.tone              || 'professional',
-        publish_url:       client?.publish_url       || '',
-        publish_platform:  client?.publish_platform  || '',
-        triggered_by:      'human_approval',
-        triggered_at:      new Date().toISOString(),
-      }
+    article_id: resolvedArticleId,
+    keyword_id,
+    client_id,
+    primary_keyword: main_keyword,
+    selected_keywords,
+    all_keywords,
+    image_prompt: imagePrompt,
+    target_word_count: article?.target_word_count || 1500,
+    target_audience: article?.target_audience || 'general audience',
+    content_type: article?.content_type || 'blog_post',
+    language: article?.language || 'en',
+    client_name: client?.name || '',
+    client_domain: client?.domain || '',
+    client_niche: client?.niche || '',
+    client_tone: client?.tone || 'professional',
+    publish_url: client?.publish_url || '',
+    publish_platform: client?.publish_platform || '',
+    triggered_by: 'human_approval',
+    triggered_at: new Date().toISOString(),
+  };
 
       try {
-        const webhookRes = await fetch(wf2WebhookUrl, {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify(webhookPayload),
-          signal:  AbortSignal.timeout(10_000),
-        })
-        if (!webhookRes.ok) {
-          console.error('[publish-keyword] WF2 webhook returned:', webhookRes.status)
-        }
-      } catch (webhookErr) {
-        console.error('[publish-keyword] WF2 webhook failed (non-fatal):', webhookErr)
+    console.log(`[publish-keyword] Sending request to n8n: ${wf2WebhookUrl}`);
+
+    const webhookRes = await fetch(wf2WebhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(webhookPayload),
+      // We keep a reasonable timeout, but n8n must be set to "Respond: Immediately"
+      signal: AbortSignal.timeout(15_000),
+    });
+
+    if (webhookRes.ok) {
+      console.log('[publish-keyword] ✅ WF2 Webhook triggered successfully');
+    } else {
+      // If n8n sends an error, we capture the text to see if it's HTML or JSON
+      const errorBody = await webhookRes.text();
+      console.error(`[publish-keyword] ❌ WF2 Webhook returned ${webhookRes.status}:`, errorBody);
+    }
+  } catch (webhookErr: any) {
+    if (webhookErr.name === 'TimeoutError') {
+      console.error('[publish-keyword] ❌ n8n took too long to respond. Ensure Webhook node is set to "Respond: Immediately"');
+    } else {
+      console.error('[publish-keyword] ❌ WF2 webhook network failure:', webhookErr.message);
+    }
       }
     }
 

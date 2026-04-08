@@ -2,9 +2,11 @@
 // app/client/[id]/ClientProfileClient.tsx
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation' // Added for refreshing data
 import Card from '../../../components/Card'
 import Layout from '../../../components/Layout'
 import KeywordPublishModal from '../../../components/KeywordPublishModal'
+import RegenerateButton from '../../../components/RegenerateButton' // 1. IMPORT BUTTON
 
 function timeAgo(d: string) {
   const diff = Date.now() - new Date(d).getTime()
@@ -91,14 +93,21 @@ type ProfileData = {
 
 export default function ClientProfileClient({ data }: { data: ProfileData }) {
   const { client, stats, statCounts, recentArticles, recentKeywords } = data
+  const router = useRouter()
 
   const [publishingKw, setPublishingKw] = useState<any | null>(null)
   const [queuedIds,    setQueuedIds]    = useState<Set<number>>(new Set())
 
+  // Refresh page data to show new generations or status changes
+  const handleRefresh = () => {
+    router.refresh()
+  }
+
   const handlePublishSuccess = (kwId: number) => {
     setQueuedIds(prev => new Set([...prev, kwId]))
     setPublishingKw(null)
-  }
+    handleRefresh()
+  } 
 
   const s = {
     section:      { background: '#2f2f2f', border: '1px solid #3f3f3f', borderRadius: 12, padding: 20, marginBottom: 16 } as React.CSSProperties,
@@ -115,7 +124,6 @@ export default function ClientProfileClient({ data }: { data: ProfileData }) {
   return (
     <Layout title="Client Profile">
       <Card>
-        {/* ── Publish Modal ── */}
         {publishingKw && (
           <KeywordPublishModal
             keyword={publishingKw}
@@ -172,14 +180,13 @@ export default function ClientProfileClient({ data }: { data: ProfileData }) {
               <StatCard label="Total Articles"   value={stats.totalArticles} />
               <StatCard label="Published"        value={stats.published}     color="#10a37f" />
               <StatCard label="In Pipeline"      value={stats.totalArticles - stats.published - stats.failed} color="#f59e0b" />
-              <StatCard label="Total Keywords"   value={stats.totalKeywords} />
-
+              <StatCard label="Total Keywords" value={stats.totalKeywords} />
             </div>
 
             {/* Two-column layout */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
 
-              {/* Left */}
+              {/* Left Column */}
               <div>
                 <div style={s.section}>
                   <div style={s.sectionTitle}><span>◈</span> Article Status</div>
@@ -208,30 +215,16 @@ export default function ClientProfileClient({ data }: { data: ProfileData }) {
                       </div>
                     ))}
                   </div>
-                  {client.notes && (
-                    <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid #2a2a2a' }}>
-                      <span style={s.fieldLabel}>Notes</span>
-                      <div style={{ ...s.field, color: '#8e8ea0', lineHeight: 1.6, fontSize: 13 }}>{client.notes}</div>
-                    </div>
-                  )}
-                  {client.publish_url && (
-                    <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid #2a2a2a' }}>
-                      <span style={s.fieldLabel}>Publish URL</span>
-                      <a href={client.publish_url} target="_blank" rel="noopener noreferrer"
-                        style={{ color: '#10a37f', fontSize: 13, fontFamily: 'monospace', textDecoration: 'none' }}>
-                        {client.publish_url}
-                      </a>
-                    </div>
-                  )}
                 </div>
               </div>
 
-              {/* Right */}
+              {/* Right Column */}
               <div>
+                {/* ── Recent Articles List ── */}
                 <div style={s.section}>
                   <div style={{ ...s.sectionTitle, justifyContent: 'space-between' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span>◈</span> Recent Articles</span>
-                    <a href={`/articles?clientId=${client.id}`} style={{ fontSize: 11, color: '#10a37f', textDecoration: 'none', fontFamily: 'monospace', fontWeight: 400 }}>View all →</a>
+                    <a href={`/articles?clientId=${client.id}`} style={{ fontSize: 11, color: '#10a37f', textDecoration: 'none', fontFamily: 'monospace', fontWeight: 400 }}>.</a>
                   </div>
                   {recentArticles.length === 0 ? (
                     <p style={{ fontSize: 13, color: '#4a4a4a', textAlign: 'center', padding: '16px 0' }}>No articles yet</p>
@@ -244,7 +237,18 @@ export default function ClientProfileClient({ data }: { data: ProfileData }) {
                         </div>
                         <div style={{ fontSize: 11, color: '#4a4a4a', fontFamily: 'monospace' }}>{timeAgo(a.updated_at)}</div>
                       </div>
-                      <Badge status={a.status} />
+
+                      {/* 2. ADD REGENERATE BUTTON TO RECENT LIST */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <RegenerateButton
+                          articleId={a.id}
+                          keyword={a.keyword}
+                          status={a.status}
+                          generation={a.generation || 1}
+                          onSuccess={handleRefresh}
+                        />
+                        <Badge status={a.status} />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -263,81 +267,50 @@ export default function ClientProfileClient({ data }: { data: ProfileData }) {
                       <thead>
                         <tr style={{ borderBottom: '1px solid #3f3f3f' }}>
                           <th style={{ ...s.th, paddingLeft: 0 }}>Keyword</th>
-                          <th style={{ ...s.th, textAlign: 'right' }}>Vol</th>
-                          <th style={{ ...s.th, textAlign: 'center' }}>Grade</th>
+                            <th style={{ ...s.th, textAlign: 'right' }}>Vol</th>
                           <th style={{ ...s.th, textAlign: 'right' }}>Action</th>
                         </tr>
                       </thead>
                       <tbody>
                         {recentKeywords.map((kw: any) => {
                           const isQueued = queuedIds.has(kw.id)
-
-                          // ✅ Show "Publish Article" ONLY when linked article status = 'new'
                           const articleStatus = kw.article_status ?? null
                           const canPublish    = articleStatus === 'new' && !isQueued
 
                           return (
-                            <tr
-                              key={kw.id}
-                              onMouseEnter={e => (e.currentTarget.style.background = '#2a2a2a')}
-                              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                              style={{ transition: 'background .1s' }}
-                            >
+                            <tr key={kw.id} style={{ transition: 'background .1s' }} onMouseEnter={e => (e.currentTarget.style.background = '#2a2a2a')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                               <td style={{ ...s.td, paddingLeft: 0, color: kw.is_primary ? '#10a37f' : '#d1d1d1', fontWeight: kw.is_primary ? 600 : 400, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {kw.keyword}
                               </td>
                               <td style={{ ...s.td, textAlign: 'right', fontFamily: 'monospace', fontSize: 12 }}>
                                 {kw.search_volumes > 0 ? kw.search_volumes.toLocaleString() : '—'}
                               </td>
-                              <td style={{ ...s.td, textAlign: 'center' }}>
-                                {kw.opportunity_grade ? (
-                                  <span style={{ fontSize: 12, fontWeight: 700, fontFamily: 'monospace', color: kw.opportunity_grade.startsWith('A') ? '#10a37f' : kw.opportunity_grade === 'B+' || kw.opportunity_grade === 'B' ? '#f59e0b' : '#8e8ea0' }}>
-                                    {kw.opportunity_grade}
-                                  </span>
-                                ) : <Badge status={kw.status} />}
-                              </td>
                               <td style={{ ...s.td, textAlign: 'right' }}>
-                                {isQueued ? (
-                                  <span style={{ fontSize: 11, color: '#10a37f', fontFamily: 'monospace', background: '#0d2e26', padding: '3px 8px', borderRadius: 5 }}>
-                                    ✓ Queued
-                                  </span>
-                                ) : canPublish ? (
-                                  <button
-                                    onClick={() => {
-                                      console.log('🔍 Raw kw object:', kw)
-                                      setPublishingKw({
-                                        id:                kw.id,
-                                        keyword:           kw.keyword,
-                                        article_id:        kw.article_id  ?? null,
-                                        client_id:         kw.client_id   ?? client.id,
-                                        search_volumes:    kw.search_volumes,
-                                        competition:       kw.competition,
-                                        competition_label: kw.competition_label,
-                                        cpc:               kw.cpc,
-                                        query_score:       kw.query_score,
-                                        opportunity_grade: kw.opportunity_grade,
-                                        related_keywords:  kw.related_keywords,
-                                        status:            kw.status,
-                                        article_status:    kw.article_status,
-                                      })
-                                    }}
-                                    style={{
-                                      padding: '4px 12px', background: '#10a37f', border: 'none',
-                                      borderRadius: 6, color: '#fff', fontSize: 11, fontWeight: 600,
-                                      cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
-                                      transition: 'background .15s',
-                                    }}
-                                    onMouseEnter={e => (e.currentTarget.style.background = '#0d8f6f')}
-                                    onMouseLeave={e => (e.currentTarget.style.background = '#10a37f')}
-                                  >
-                                    Publish Article
-                                  </button>
-                                ) : (
-                                  // Show article status badge if article exists but not 'new'
-                                  articleStatus && articleStatus !== 'new'
-                                    ? <Badge status={articleStatus} />
-                                    : <Badge status={kw.status} />
-                                )}
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
+                                  {isQueued ? (
+                                    <span style={{ fontSize: 11, color: '#10a37f', fontFamily: 'monospace', background: '#0d2e26', padding: '3px 8px', borderRadius: 5 }}>✓ Queued</span>
+                                  ) : canPublish ? (
+                                    <button
+                                        onClick={() => setPublishingKw({ ...kw, client_id: client.id })}
+                                        style={{ padding: '4px 12px', background: '#10a37f', border: 'none', borderRadius: 6, color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                                      >
+                                        Publish Article
+                                      </button>
+                                    ) : (
+                                        <>
+                                          {/* 3. ADD REGENERATE BUTTON TO KEYWORDS TABLE (if article exists) */}
+                                          {kw.article_id && (
+                                            <RegenerateButton
+                                              articleId={kw.article_id}
+                                              keyword={kw.keyword}
+                                              status={articleStatus}
+                                              onSuccess={handleRefresh}
+                                            />
+                                          )}
+                                      <Badge status={articleStatus || kw.status} />
+                                    </>
+                                  )}
+                                </div>
                               </td>
                             </tr>
                           )
@@ -345,30 +318,9 @@ export default function ClientProfileClient({ data }: { data: ProfileData }) {
                       </tbody>
                     </table>
                   )}
-
-                  {/* Legend */}
-                  <div style={{ marginTop: 12, padding: '8px 12px', background: '#262626', borderRadius: 7, fontSize: 11, color: '#6b6b7b', fontFamily: 'monospace' }}>
-                    ✦ "Publish Article" appears when the linked article has status <span style={{ color: '#60a5fa' }}>new</span> — ready for WF2 generation
-                  </div>
                 </div>
               </div>
             </div>
-
-            {/* Competitors */}
-            {client.competitors && (
-              <div style={s.section}>
-                <div style={s.sectionTitle}><span>⊞</span> Tracked Competitors</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {client.competitors.split('\n').filter(Boolean).map((comp: string, i: number) => (
-                    <a key={i} href={`https://${comp.trim().replace(/^https?:\/\//, '')}`} target="_blank" rel="noopener noreferrer"
-                      style={{ fontSize: 12, color: '#8e8ea0', background: '#2a2a2a', padding: '4px 12px', borderRadius: 6, border: '1px solid #3f3f3f', textDecoration: 'none', fontFamily: 'monospace' }}>
-                      {comp.trim().replace(/^https?:\/\//, '')}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-
           </div>
         </div>
       </Card>
