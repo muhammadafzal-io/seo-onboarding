@@ -65,7 +65,7 @@ async function getClientProfile(id: number) {
     : 0
 
  const kwCountRes = await sb.from('keywords').select('id', { count: 'exact', head: true }).eq('client_id', id)
-console.log('kwCountRes',kwCountRes)
+
   // ✅ FIX: Flatten the joined article data
   const processedKeywords = (recentKeywords.data || []).map((kw: any) => {
     // Supabase returns 'articles' as an array because of the join
@@ -79,7 +79,6 @@ console.log('kwCountRes',kwCountRes)
       competition_label: kw.competition_label || kw.competition 
     };
   })
- // console.log('processedKeywords',processedKeywords)
 
   // Log the cleaned data to the terminal to verify
 

@@ -141,6 +141,8 @@ export default function KeywordPublishModal({ keyword, onClose, onSuccess }: Pro
         body:    JSON.stringify(payload),
       })
 
+      console.log('res', res)
+
       const text = await res.text()
     
 

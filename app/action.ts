@@ -4,7 +4,6 @@ import { supabase } from "../lib/supabase"
 
 export async function submitOnboarding(formData: FormData) {
 
-
   // ── Helpers ──────────────────────────────────────────────
   const get = (key: string) =>
     (formData.get(key) as string | null)?.trim() || ''
@@ -87,11 +86,7 @@ export async function submitOnboarding(formData: FormData) {
     return { success: false, error: 'Please enter at least one keyword.' }
   }
 
-  // ✅ FIXED: defined BEFORE usage
   const keywordString = keywordList.join(', ')
-  console.log('keywordString', keywordString)
-
-  const primaryKeyword = keywordList[0]
 
   const imagePrompt =
     `Professional blog header image representing: ${keywordString}. ` +
@@ -107,6 +102,7 @@ export async function submitOnboarding(formData: FormData) {
         keyword: keywordString,
         keyword_normalized: keywordString,
         status: 'scouted',
+        generation: 1, // ✅ ADDED: Required for unique constraint
         target_word_count,
         target_audience,
         content_type,
@@ -115,7 +111,8 @@ export async function submitOnboarding(formData: FormData) {
         image_prompt: imagePrompt,
       },
       {
-        onConflict: 'client_id,keyword_normalized',
+        // ✅ UPDATED: Must match DB unique constraint exactly (no spaces)
+        onConflict: 'client_id,keyword_normalized,generation',
         ignoreDuplicates: true,
       }
     )
@@ -148,30 +145,13 @@ export async function submitOnboarding(formData: FormData) {
     console.warn('Keywords insert warning:', kwError.message)
   }
 
-  await supabase.from('keywords').upsert(keywordRows, { onConflict: 'article_id,keyword_normalized', ignoreDuplicates: true })
-
-
   // ── 5. Log onboarding ─────────────────────────────────────
-  const { error: logError } = await supabase.from('agent_logs').insert({
-    client_id: client.id,
-    agent_name: 'onboarding',
-    action: 'client_onboarded',
-    details:
-      `${keywordList.length} keywords → 1 article → 1 image. ` +
-      `Keywords: ${keywordString}. ` +
-      `Type: ${content_type}. Lang: ${language}. Words: ~${target_word_count}. ` +
-      `Notes: ${notes || 'none'}`,
-  })
-
-  if (logError) {
-    console.warn('Log insert warning (non-fatal):', logError.message)
-  }
-
-
-  // ── 5. Log event ──────────────────────────────────────────
+  // (Removed duplicate log calls)
   await supabase.from('agent_logs').insert({
-    client_id: client.id, agent_name: 'onboarding', action: 'client_onboarded',
-    details: `${keywordList.length} keywords → 1 article. Type: ${content_type}. Lang: ${language}.`,
+    client_id: client.id,
+    agent_name: 'onboarding', 
+    action: 'client_onboarded',
+    details: `${keywordList.length} keywords → 1 article (gen 1). Type: ${content_type}. Lang: ${language}.`,
   }).then(({ error }) => { if (error) console.warn('[log]', error.message) })
 
 
