@@ -6,11 +6,86 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
+const CONTENT_ANGLES = [
+  'comprehensive guide',
+  'practical tips',
+  'beginner friendly',
+  'expert deep dive',
+  'comparison and review',
+  'step by step tutorial',
+  'myths vs facts',
+  'case study approach',
+  'pros and cons analysis',
+  'future trends overview',
+]
+
+const WRITING_STYLES = [
+  'conversational and friendly',
+  'authoritative and expert',
+  'storytelling with examples',
+  'data-driven and analytical',
+  'question and answer format',
+  'listicle with explanations',
+  'journalistic and objective',
+]
+
+const IMAGE_STYLES = [
+  'clean flat design illustration',
+  'modern photography with bokeh',
+  'minimalist vector art',
+  'vibrant infographic style',
+  'dark moody professional photo',
+  'bright airy lifestyle photo',
+  'technical diagram style',
+  'abstract geometric shapes',
+]
+
+const IMAGE_MOODS = [
+  'professional and trustworthy',
+  'energetic and inspiring',
+  'calm and reassuring',
+  'bold and striking',
+  'warm and inviting',
+  'clean and modern',
+]
+
+const INTRO_HOOKS = [
+  'start with a surprising statistic',
+  'start with a compelling question',
+  'start with a relatable scenario',
+  'start with a bold claim',
+  'start with a brief story',
+  'start with a common misconception',
+]
+
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
+function buildVariationSeed() {
+  return Math.floor(Math.random() * 900000) + 100000
+}
+
+function buildContentVariation() {
+  return {
+    variation_seed: buildVariationSeed(),
+    content_angle: pick(CONTENT_ANGLES),
+    writing_style: pick(WRITING_STYLES),
+    intro_hook: pick(INTRO_HOOKS),
+    image_style: pick(IMAGE_STYLES),
+    image_mood: pick(IMAGE_MOODS),
+    timestamp_ms: Date.now(),   // guarantees uniqueness even if other picks collide
+  }
+}
+
+function buildImagePrompt(keywords: string[], style: string, mood: string): string {
+  const subject = keywords.slice(0, 3).join(', ')
+  return `Professional blog header image for article about: ${subject}. Style: ${style}. Mood: ${mood}. High quality, no text, no words, no letters anywhere in image.`
+}
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-
 
     const {
       keyword_id,
@@ -21,12 +96,12 @@ export async function POST(req: NextRequest) {
       all_keywords,
     } = body
 
-    // ── Validate required fields ──────────────────────────────
+
     if (!keyword_id || !client_id || !main_keyword) {
       return NextResponse.json({
         error: `Missing required fields: ${[
-          !keyword_id   && 'keyword_id',
-          !client_id    && 'client_id',
+          !keyword_id && 'keyword_id',
+          !client_id && 'client_id',
           !main_keyword && 'main_keyword',
         ].filter(Boolean).join(', ')}`
       }, { status: 400 })
@@ -36,7 +111,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'all_keywords must be a non-empty array' }, { status: 400 })
     }
 
-    // ── Resolve article_id from payload or DB ─────────────────
+
     let resolvedArticleId = article_id
     if (!resolvedArticleId) {
       const { data: kwRow } = await supabase
@@ -53,7 +128,6 @@ export async function POST(req: NextRequest) {
       }, { status: 400 })
     }
 
-    // ── Check idempotency ─────────────────────────────────────
     const { data: existing } = await supabase
       .from('keywords')
       .select('id, status')
@@ -68,17 +142,18 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const imagePrompt = `Professional blog header image representing: ${all_keywords.join(', ')}. Clean modern photography style, no text, no words in image.`
+    const variation = buildContentVariation()
+    const imagePrompt = buildImagePrompt(all_keywords, variation.image_style, variation.image_mood)
 
     // ── 1. Update keyword ─────────────────────────────────────
     const { error: kwError } = await supabase
       .from('keywords')
       .update({
-        status:                    'researched',
+        status: 'researched',
         selected_related_keywords: selected_keywords,
-        all_selected_keywords:     all_keywords,
-        queued_at:                 new Date().toISOString(),
-        updated_at:                new Date().toISOString(),
+        all_selected_keywords: all_keywords,
+        queued_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .eq('id', keyword_id)
 
@@ -91,9 +166,9 @@ export async function POST(req: NextRequest) {
     const { data: article, error: artError } = await supabase
       .from('articles')
       .update({
-        status:       'new',
+        status: 'new',
         image_prompt: imagePrompt,
-        updated_at:   new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .eq('id', resolvedArticleId)
       .select('id, keyword, client_id, target_word_count, target_audience, content_type, language')
@@ -112,64 +187,71 @@ export async function POST(req: NextRequest) {
       .eq('id', client_id)
       .single()
 
-    // ── 4. Fire WF2 webhook ───────────────────────────────────
-    //const wf2WebhookUrl = process.env.WF2_WEBHOOK_URL
-    // ── 4. Fire WF2 webhook ───────────────────────────────────
-    // Use Type Assertion to fix the ts(2339) error
-    const wf2WebhookUrl = (process.env as any).WF2_WEBHOOK_URL as string;
+    const wf2WebhookUrl = (process.env as any).WF2_WEBHOOK_URL as string
 
     if (!wf2WebhookUrl) {
-      console.warn('[publish-keyword] WF2_WEBHOOK_URL not set — skipping webhook');
+      console.warn('[publish-keyword] WF2_WEBHOOK_URL not set — skipping webhook')
     } else {
       const webhookPayload = {
-    article_id: resolvedArticleId,
-    keyword_id,
-    client_id,
-    primary_keyword: main_keyword,
-    selected_keywords,
-    all_keywords,
-    image_prompt: imagePrompt,
-    target_word_count: article?.target_word_count || 1500,
-    target_audience: article?.target_audience || 'general audience',
-    content_type: article?.content_type || 'blog_post',
-    language: article?.language || 'en',
-    client_name: client?.name || '',
-    client_domain: client?.domain || '',
-    client_niche: client?.niche || '',
-    client_tone: client?.tone || 'professional',
-    publish_url: client?.publish_url || '',
-    publish_platform: client?.publish_platform || '',
-    triggered_by: 'human_approval',
-    triggered_at: new Date().toISOString(),
-  };
+
+        article_id: resolvedArticleId,
+        keyword_id,
+        client_id,
+
+
+        primary_keyword: main_keyword,
+        selected_keywords,
+        all_keywords,
+
+        target_word_count: article?.target_word_count || 1500,
+        target_audience: article?.target_audience || 'general audience',
+        content_type: article?.content_type || 'blog_post',
+        language: article?.language || 'en',
+
+        client_name: client?.name || '',
+        client_domain: client?.domain || '',
+        client_niche: client?.niche || '',
+        client_tone: client?.tone || 'professional',
+        publish_url: client?.publish_url || '',
+        publish_platform: client?.publish_platform || '',
+
+        variation_seed: variation.variation_seed,   // unique number — use in prompt
+        content_angle: variation.content_angle,    // e.g. "comprehensive guide"
+        writing_style: variation.writing_style,    // e.g. "conversational and friendly"
+        intro_hook: variation.intro_hook,       // e.g. "start with a question"
+        image_style: variation.image_style,      // e.g. "clean flat design illustration"
+        image_mood: variation.image_mood,       // e.g. "warm and inviting"
+        image_prompt: imagePrompt,                // full prompt for image generation
+        is_regeneration: false,
+        generation: 1,
+
+        triggered_by: 'human_approval',
+        triggered_at: new Date().toISOString(),
+      }
 
       try {
-    console.log(`[publish-keyword] Sending request to n8n: ${wf2WebhookUrl}`);
+        console.log(`[publish-keyword] Firing WF2 webhook — seed: ${variation.variation_seed}, angle: ${variation.content_angle}`)
 
-    const webhookRes = await fetch(wf2WebhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(webhookPayload),
-      // We keep a reasonable timeout, but n8n must be set to "Respond: Immediately"
-      signal: AbortSignal.timeout(15_000),
-    });
+        const webhookRes = await fetch(wf2WebhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(webhookPayload),
+          signal: AbortSignal.timeout(15_000),
+        })
+        console.log('publish keyword route called', wf2WebhookUrl)
 
-    if (webhookRes.ok) {
-      console.log('[publish-keyword] ✅ WF2 Webhook triggered successfully');
-    } else {
-      // If n8n sends an error, we capture the text to see if it's HTML or JSON
-      const errorBody = await webhookRes.text();
-      console.error(`[publish-keyword] ❌ WF2 Webhook returned ${webhookRes.status}:`, errorBody);
-    }
-  } catch (webhookErr: any) {
-    if (webhookErr.name === 'TimeoutError') {
-      console.error('[publish-keyword] ❌ n8n took too long to respond. Ensure Webhook node is set to "Respond: Immediately"');
-    } else {
-      console.error('[publish-keyword] ❌ WF2 webhook network failure:', webhookErr.message);
-    }
+        if (webhookRes.ok) {
+          console.log('[publish-keyword] ✅ WF2 webhook fired successfully')
+        } else {
+          const errBody = await webhookRes.text()
+          console.error(`[publish-keyword] ❌ WF2 returned ${webhookRes.status}:`, errBody)
+        }
+      } catch (webhookErr: any) {
+        if (webhookErr.name === 'TimeoutError') {
+          console.error('[publish-keyword] ❌ n8n timeout — set Webhook to "Respond: Immediately"')
+        } else {
+          console.error('[publish-keyword] ❌ webhook error:', webhookErr.message)
+        }
       }
     }
 
@@ -178,14 +260,17 @@ export async function POST(req: NextRequest) {
       client_id,
       article_id: resolvedArticleId,
       agent_name: 'human_approval',
-      action:     'article_queued_by_user',
-      status:     'ok',
-      details:    JSON.stringify({
+      action: 'article_queued_by_user',
+      status: 'ok',
+      details: JSON.stringify({
         keyword_id,
         main_keyword,
         selected_count: selected_keywords.length,
         total_keywords: all_keywords.length,
         all_keywords,
+        variation_seed: variation.variation_seed,
+        content_angle: variation.content_angle,
+        writing_style: variation.writing_style,
         wf2_webhook_fired: !!wf2WebhookUrl,
       }),
     }).then(({ error }) => {
@@ -193,12 +278,14 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({
-      success:        true,
+      success: true,
       keyword_id,
-      article_id:     resolvedArticleId,
-      status:         'researched',
+      article_id: resolvedArticleId,
+      status: 'researched',
       keywords_count: all_keywords.length,
-      wf2_triggered:  !!wf2WebhookUrl,
+      variation_seed: variation.variation_seed,
+      content_angle: variation.content_angle,
+      wf2_triggered: !!wf2WebhookUrl,
     })
 
   } catch (err: any) {

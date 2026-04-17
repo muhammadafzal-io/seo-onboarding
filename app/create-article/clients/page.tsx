@@ -2,6 +2,7 @@
 import { createClient } from '@supabase/supabase-js'
 import ClientsClient from './ClientsClient'
 
+
 export const revalidate = 0
 
 const sb = createClient(
@@ -42,4 +43,3 @@ export default async function ClientsPage() {
 
   return <ClientsClient initialClients={enriched} />
 }
-

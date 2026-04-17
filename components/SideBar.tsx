@@ -5,9 +5,10 @@ import Link from 'next/link'
 const NAV = [
   { href: '/dashboard', label: 'Dashboard', icon: '⊞' },
   { href: '/clients', label: 'Clients', icon: '◉' },
+  { href: '/onboarding', label: 'Onboarding', icon: '✦', badge: 'NEW' },
   { href: '/articles', label: 'Articles', icon: '◈' },
   { href: '/keywords', label: 'Keywords', icon: '◇' },
-  { href: '/', label: 'Onboarding', icon: '✦', badge: 'NEW' },
+  { href: '/analytics', label: 'Analytics', icon: '▲' },  // ← NEW
   { href: '/settings', label: 'Settings', icon: '⚙' },
 ]
 
@@ -18,8 +19,7 @@ export default function Sidebar({ open }: { open: boolean }) {
     <aside style={{
       width: 220, background: 'var(--sb)', borderRight: '1px solid var(--border2)',
       display: 'flex', flexDirection: 'column', padding: '20px 12px',
-      position: 'fixed', top: 0, left: 0, bottom: 0, overflowY: 'auto',
-      zIndex: 100,
+      position: 'fixed', top: 0, left: 0, bottom: 0, overflowY: 'auto', zIndex: 100,
     }}>
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 4px', marginBottom: 28 }}>
@@ -30,9 +30,7 @@ export default function Sidebar({ open }: { open: boolean }) {
         </div>
       </div>
 
-      <div style={{ fontSize: 9, color: 'var(--t3)', fontFamily: 'var(--mono)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0 8px', marginBottom: 6 }}>
-        Menu
-      </div>
+      <div style={{ fontSize: 9, color: 'var(--t3)', fontFamily: 'var(--mono)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0 8px', marginBottom: 6 }}>Menu</div>
 
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
         {NAV.map(item => {
@@ -61,12 +59,22 @@ export default function Sidebar({ open }: { open: boolean }) {
         })}
       </nav>
 
+      {/* Analytics settings shortcut */}
+      <div style={{ paddingTop: 10, borderTop: '1px solid var(--border2)', marginTop: 8, marginBottom: 8 }}>
+        <Link href="/analytics/settings" style={{
+          display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 8,
+          color: path.includes('/analytics/settings') ? 'var(--acc)' : 'var(--t3)',
+          background: path.includes('/analytics/settings') ? 'var(--acc-l)' : 'transparent',
+          fontSize: 12, textDecoration: 'none',
+        }}>
+          <span style={{ fontSize: 12 }}>⚙</span> GA properties
+        </Link>
+      </div>
+
       {/* User */}
-      <div style={{ paddingTop: 16, borderTop: '1px solid var(--border2)', marginTop: 16 }}>
+      <div style={{ paddingTop: 8, borderTop: '1px solid var(--border2)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px' }}>
-          <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,var(--acc),#0d6e5a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: '#fff', flexShrink: 0 }}>
-            MA
-          </div>
+          <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,var(--acc),#0d6e5a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: '#fff', flexShrink: 0 }}>MA</div>
           <div>
             <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)' }}>M. Afzal</div>
             <div style={{ fontSize: 10, color: 'var(--t3)', fontFamily: 'var(--mono)' }}>Owner</div>

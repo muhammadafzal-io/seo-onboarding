@@ -8,8 +8,11 @@
     "start": "next start"
   },
   "dependencies": {
+    "@google-analytics/data": "^5.2.1",
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.100.0",
+    "@types/google.analytics": "^0.0.46",
+    "googleapis": "^171.4.0",
     "next": "^14.2.25",
     "react": "^18",
     "react-dom": "^18",

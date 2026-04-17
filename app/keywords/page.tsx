@@ -36,19 +36,6 @@ function Badge({ status }: { status: string }) {
   )
 }
 
-// function CompetitionBar({ value }: { value: string }) {
-//   const pct = Math.round(Math.min(1, value) * 100)
-//   const color = pct > 66 ? '#f87171' : pct > 33 ? '#f59e0b' : '#10a37f'
-//   return (
-//     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-//       <div style={{ width: 48, height: 4, background: '#2a2a2a', borderRadius: 2, overflow: 'hidden' }}>
-//         <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 2 }} />
-//       </div>
-//       <span style={{ fontSize: 11, color: '#6b6b7b', fontFamily: 'monospace' }}>{pct}%</span>
-//     </div>
-//   )
-// }
-
 export default function KeywordsPage() {
   const [keywords, setKeywords] = useState<Keyword[]>([])
   const [clients, setClients] = useState<ClientOption[]>([])
@@ -135,7 +122,7 @@ export default function KeywordsPage() {
 
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
-          <div>
+              <div>
                 <a href="/dashboard" style={{ fontSize: 12, color: '#6b6b7b', textDecoration: 'none', display: 'block', marginBottom: 6 }}>← Dashboard</a>
                 <h1 style={{ fontSize: 22, fontWeight: 600, color: '#ececec', letterSpacing: '-0.025em', margin: 0 }}>
                   Keywords
@@ -148,14 +135,14 @@ export default function KeywordsPage() {
                 <p style={{ fontSize: 13, color: '#8e8ea0', marginTop: 4 }}>
                   {total.toLocaleString()} keyword{total !== 1 ? 's' : ''}{clientId ? ' for this client' : ' across all clients'}
                 </p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', background: '#0d2e26', border: '1px solid #155e4a', borderRadius: 7 }}>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', background: '#0d2e26', border: '1px solid #155e4a', borderRadius: 7 }}>
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10a37f', animation: 'pulse 2s infinite' }} />
                 <span style={{ fontSize: 11, color: '#10a37f', fontFamily: 'monospace', fontWeight: 500 }}>Live</span>
-          </div>
-        </div>
+              </div>
+            </div>
 
-        <div style={{ background: '#2f2f2f', border: '1px solid #3f3f3f', borderRadius: 12, padding: 20 }}>
+            <div style={{ background: '#2f2f2f', border: '1px solid #3f3f3f', borderRadius: 12, padding: 20 }}>
               {/* Filters */}
               <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
                 <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
@@ -184,71 +171,71 @@ export default function KeywordsPage() {
                     ✕ Clear
                   </button>
                 )}
-          </div>
+              </div>
 
               {/* Table */}
-          <div style={{ overflowX: 'auto' }}>
-            {loading ? (
+              <div style={{ overflowX: 'auto' }}>
+                {loading ? (
                   <div style={{ padding: '56px 0', textAlign: 'center', color: '#6b6b7b', fontSize: 13 }}>
                     <div style={{ width: 24, height: 24, borderRadius: '50%', border: '2px solid #3f3f3f', borderTopColor: '#10a37f', margin: '0 auto 12px', animation: 'spin 0.8s linear infinite' }} />
                     Loading keywords...
                   </div>
-            ) : keywords.length === 0 ? (
-                    <div style={{ padding: '64px 0', textAlign: 'center' }}>
-                      <div style={{ fontSize: 32, marginBottom: 12 }}>◇</div>
-                      <p style={{ color: '#6b6b7b', fontSize: 14 }}>No keywords found</p>
-                      <p style={{ color: '#4a4a4a', fontSize: 12, marginTop: 4 }}>
-                        {search || status !== 'All' || clientId ? 'Try adjusting your filters' : 'Keywords appear here after client onboarding'}
-                      </p>
-              </div>
-            ) : (
-                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #3f3f3f' }}>
-                            <th style={th}>Keyword</th>
-                            <th style={th}>Client</th>
-                            <th style={th}>Article</th>
-                            <th style={th}>Type</th>
-                            <th style={th}>Volume</th>
-                            <th style={th}>Score</th>
-                            <th style={th}>Competition</th>
-                            <th style={th}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {keywords.map(row => {
-                    const client = Array.isArray(row.clients) ? row.clients[0] : row.clients
-                    return (
-                      <tr key={row.id}
-                        onMouseEnter={e => (e.currentTarget.style.background = '#2a2a2a')}
-                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                        style={{ transition: 'background .1s' }}
-                      >
-                        <td style={{ ...td, color: row.is_primary ? '#10a37f' : '#ececec', fontWeight: row.is_primary ? 600 : 500, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {row.keyword}
-                        </td>
-                        <td style={{ ...td, maxWidth: 140 }}>
-                          {client ? (
-                            <a href={`/client/${client.id}`} style={{ color: '#d1d1d1', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                              {client.name || client.domain}
-                            </a>
-                          ) : '—'}
-                        </td>
-                        <td style={{ ...td, fontFamily: 'monospace', fontSize: 11, color: '#4a4a4a' }}>
-                          <a href={`/blog/${row.article_id}`} style={{ color: '#60a5fa', textDecoration: 'none' }}>#{row.article_id}</a>
-                        </td>
-                        <td style={td}><Badge status={row.is_primary ? 'primary' : 'secondary'} /></td>
-                        <td style={{ ...td, fontFamily: 'monospace', fontSize: 12 }}>{(row.search_volumes || 0).toLocaleString()}</td>
-                        <td style={{ ...td, fontFamily: 'monospace', fontSize: 12 }}>{row.query_score ? Number(row.query_score).toFixed(2) : '—'}</td>
-                        <td style={{ ...td, fontFamily: 'monospace', fontSize: 12 }}>{(row.competition || 0).toLocaleString()}</td>
-                        <td style={td}><Badge status={row.status} /></td>
+                ) : keywords.length === 0 ? (
+                  <div style={{ padding: '64px 0', textAlign: 'center' }}>
+                    <div style={{ fontSize: 32, marginBottom: 12 }}>◇</div>
+                    <p style={{ color: '#6b6b7b', fontSize: 14 }}>No keywords found</p>
+                    <p style={{ color: '#4a4a4a', fontSize: 12, marginTop: 4 }}>
+                      {search || status !== 'All' || clientId ? 'Try adjusting your filters' : 'Keywords appear here after client onboarding'}
+                    </p>
+                  </div>
+                ) : (
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid #3f3f3f' }}>
+                        <th style={th}>Keyword</th>
+                        <th style={th}>Client</th>
+                        <th style={th}>Article</th>
+                        <th style={th}>Type</th>
+                        <th style={th}>Volume</th>
+                        <th style={th}>Score</th>
+                        <th style={th}>Competition</th>
+                        <th style={th}>Status</th>
                       </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            )}
-          </div>
+                    </thead>
+                    <tbody>
+                      {keywords.map(row => {
+                        const client = Array.isArray(row.clients) ? row.clients[0] : row.clients
+                        return (
+                          <tr key={row.id}
+                            onMouseEnter={e => (e.currentTarget.style.background = '#2a2a2a')}
+                            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                            style={{ transition: 'background .1s' }}
+                          >
+                            <td style={{ ...td, color: row.is_primary ? '#10a37f' : '#ececec', fontWeight: row.is_primary ? 600 : 500, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {row.keyword}
+                            </td>
+                            <td style={{ ...td, maxWidth: 140 }}>
+                              {client ? (
+                                <a href={`/client/${client.id}`} style={{ color: '#d1d1d1', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                                  {client.name || client.domain}
+                                </a>
+                              ) : '—'}
+                            </td>
+                            <td style={{ ...td, fontFamily: 'monospace', fontSize: 11, color: '#4a4a4a' }}>
+                              <a href={`/blog/${row.article_id}`} style={{ color: '#60a5fa', textDecoration: 'none' }}>#{row.article_id}</a>
+                            </td>
+                            <td style={td}><Badge status={row.is_primary ? 'primary' : 'secondary'} /></td>
+                            <td style={{ ...td, fontFamily: 'monospace', fontSize: 12 }}>{(row.search_volumes || 0).toLocaleString()}</td>
+                            <td style={{ ...td, fontFamily: 'monospace', fontSize: 12 }}>{row.query_score ? Number(row.query_score).toFixed(2) : '—'}</td>
+                            <td style={{ ...td, fontFamily: 'monospace', fontSize: 12 }}>{(row.competition || 0).toLocaleString()}</td>
+                            <td style={td}><Badge status={row.status} /></td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
 
               {/* Pagination */}
               {total > 0 && (
@@ -265,10 +252,10 @@ export default function KeywordsPage() {
                   </div>
                 </div>
               )}
-        </div>
-      </div>
+            </div>
+          </div>
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}`}</style>
-    </div>
+        </div>
       </Card>
     </Layout>
   )

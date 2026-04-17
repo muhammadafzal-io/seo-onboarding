@@ -62,7 +62,7 @@ export default function RegenerateButton({ articleId, keyword, status, generatio
         onMouseEnter={e => { e.currentTarget.style.borderColor = '#10a37f'; e.currentTarget.style.color = '#10a37f' }}
         onMouseLeave={e => { e.currentTarget.style.borderColor = '#3a3a3a'; e.currentTarget.style.color = '#8e8ea0' }}
       >
-        ↺ Regenerate.......
+        ↺ Regenerate
         {generation > 1 && <span style={{ fontSize: 9, background: '#2a2a2a', padding: '1px 5px', borderRadius: 3, fontFamily: 'monospace' }}>v{generation}</span>}
       </button>
 

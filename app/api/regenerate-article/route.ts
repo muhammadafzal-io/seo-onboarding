@@ -50,27 +50,27 @@ export async function POST(req: NextRequest) {
     const { data: newArticle, error: createErr } = await sb
       .from('articles')
       .upsert({
-        client_id:          original.client_id,
-        keyword:            original.keyword,
+        client_id: original.client_id,
+        keyword: original.keyword,
         keyword_normalized: original.keyword_normalized,
-        status:             'new',
-        generation:         nextGeneration,
-        parent_article_id:  rootId,
-        regenerate_reason:  reason,
-        regenerated_at:     new Date().toISOString(),
-        target_word_count:  original.target_word_count  || 1500,
-        target_audience:    original.target_audience    || 'general audience',
-        content_type:       original.content_type       || 'blog_post',
-        language:           original.language           || 'en',
-        content:            null,
-        meta_title:         null,
-        meta_description:   null,
+        status: 'new',
+        generation: nextGeneration,
+        parent_article_id: rootId,
+        regenerate_reason: reason,
+        regenerated_at: new Date().toISOString(),
+        target_word_count: original.target_word_count || 1500,
+        target_audience: original.target_audience || 'general audience',
+        content_type: original.content_type || 'blog_post',
+        language: original.language || 'en',
+        content: null,
+        meta_title: null,
+        meta_description: null,
         featured_image_url: null,
-        image_prompt:       original.image_prompt || null,
-        attempts:           0,
+        image_prompt: original.image_prompt || null,
+        attempts: 0,
       }, {
         // This matches the SQL constraint we created in Part 1
-       onConflict: 'client_id,keyword_normalized,generation' // No spaces
+        onConflict: 'client_id,keyword_normalized,generation' // No spaces
       })
       .select()
       .single()
@@ -87,19 +87,19 @@ export async function POST(req: NextRequest) {
 
     if (originalKeywords && originalKeywords.length > 0) {
       const kwInserts = originalKeywords.map((kw: any) => ({
-        article_id:                 newArticle.id,
-        client_id:                  original.client_id,
-        keyword:                    kw.keyword,
-        keyword_normalized:         kw.keyword_normalized,
-        is_primary:                 kw.is_primary,
-        status:                     'researched',
-        search_volumes:             kw.search_volumes,
-        competition:                kw.competition,
-        cpc:                        kw.cpc,
-        related_keywords:           kw.related_keywords,
-        selected_related_keywords:  kw.selected_related_keywords,
-        all_selected_keywords:      kw.all_selected_keywords,
-        queued_at:                  new Date().toISOString(),
+        article_id: newArticle.id,
+        client_id: original.client_id,
+        keyword: kw.keyword,
+        keyword_normalized: kw.keyword_normalized,
+        is_primary: kw.is_primary,
+        status: 'researched',
+        search_volumes: kw.search_volumes,
+        competition: kw.competition,
+        cpc: kw.cpc,
+        related_keywords: kw.related_keywords,
+        selected_related_keywords: kw.selected_related_keywords,
+        all_selected_keywords: kw.all_selected_keywords,
+        queued_at: new Date().toISOString(),
       }))
 
       // Use upsert here too to prevent errors on double-clicking
@@ -118,24 +118,44 @@ export async function POST(req: NextRequest) {
 
     if (wf2Url) {
       try {
-        const r = await fetch(wf2Url, {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({
-            article_id:         newArticle.id,
-            parent_article_id:  rootId,
-            client_id:          original.client_id,
-            generation:         nextGeneration,
-            primary_keyword:    original.keyword,
-            is_regeneration:    true,
-            variation_seed:     variationSeed,
-            client_name:        client?.name || '',
-            client_domain:      client?.domain || '',
-            client_tone:        client?.tone || 'Professional',
-            triggered_by:       'regeneration',
-          }),
-        })
-        webhookFired = r.ok
+        const controller = new AbortController()
+
+        const timeout = setTimeout(() => {
+          controller.abort()
+        }, 60000)
+
+        try {
+
+          const r = await fetch(wf2Url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              article_id: newArticle.id,
+              parent_article_id: rootId,
+              client_id: original.client_id,
+              generation: nextGeneration,
+              primary_keyword: original.keyword,
+              is_regeneration: true,
+              variation_seed: variationSeed,
+              client_name: client?.name || '',
+              client_domain: client?.domain || '',
+              client_tone: client?.tone || 'Professional',
+              triggered_by: 'regeneration',
+            }),
+            signal: controller.signal,
+          })
+
+          webhookFired = r.ok
+          console.log('this is r', r)
+
+        } catch (e) {
+          console.error('Webhook failed', e)
+        } finally {
+          clearTimeout(timeout)
+        }
+        //  webhookFired = r.ok
       } catch (e) {
         console.error('Webhook failed', e)
       }
@@ -143,12 +163,12 @@ export async function POST(req: NextRequest) {
 
     // ── 6. Log event ──────────────────────────────────
     await sb.from('agent_logs').insert({
-      client_id:  original.client_id,
+      client_id: original.client_id,
       article_id: newArticle.id,
       agent_name: 'human_approval',
-      action:     'article_regeneration_triggered',
-      status:     'ok',
-      details:    JSON.stringify({ reason, variation_seed: variationSeed }),
+      action: 'article_regeneration_triggered',
+      status: 'ok',
+      details: JSON.stringify({ reason, variation_seed: variationSeed }),
     })
 
     return NextResponse.json({

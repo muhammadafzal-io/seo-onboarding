@@ -1,6 +1,8 @@
 'use client'
+// app/clients/ClientsClient.tsx
+
 import { useState, useMemo } from 'react'
-import Layout from '../../components/Layout'
+import Layout from '../../../components/Layout';
 
 // ── Types ─────────────────────────────────────────────────────
 type ClientStats = { total: number; published: number; inPipeline: number; failed: number }
@@ -128,7 +130,7 @@ function ClientModal({ state, onClose, onSave }: {
         {/* Header */}
         <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid #3a3a3a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <p style={{ fontSize: 10, color: '#6b6b7b', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0  Asc 3px' }}>
+            <p style={{ fontSize: 10, color: '#6b6b7b', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 3px' }}>
               {state.mode === 'add' ? 'New Client' : 'Edit Client'}
             </p>
             <h2 style={{ fontSize: 17, fontWeight: 600, color: '#ececec', margin: 0 }}>
@@ -255,8 +257,8 @@ export default function ClientsClient({ initialClients }: { initialClients: Clie
   }
 
   // ── Styles ────────────────────────────────────────────────
-  const th: React.CSSProperties = { padding: '10px 14px', textAlign: 'left' as const, color: '#6b6b7b', fontSize: 11, fontFamily: 'monospace', textTransform: 'uppercase' as const, letterSpacing: '0.06em', whiteSpace: 'nowrap' as const, fontWeight: 500, borderBottom: '1px solid #3a3a3a' }
-  const td: React.CSSProperties = { padding: '12px 14px', borderBottom: '1px solid #2a2a2a', fontSize: 13, verticalAlign: 'middle' as const }
+  const th: React.CSSProperties = { padding: '10px 14px', textAlign: 'left', color: '#6b6b7b', fontSize: 11, fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap', fontWeight: 500, borderBottom: '1px solid #3a3a3a' }
+  const td: React.CSSProperties = { padding: '12px 14px', borderBottom: '1px solid #2a2a2a', fontSize: 13, verticalAlign: 'middle' }
 
   return (
     <Layout title="Clients">
@@ -452,12 +454,12 @@ export default function ClientsClient({ initialClients }: { initialClients: Clie
                     <th style={{ ...th, paddingLeft: 20 }}>Client</th>
                     <th style={th}>Niche</th>
                     <th style={th}>Platform</th>
-                    <th style={{ ...th, textAlign: 'right' as const }}>Articles</th>
-                    <th style={{ ...th, textAlign: 'right' as const }}>Published</th>
-                    <th style={{ ...th, textAlign: 'right' as const }}>Pipeline</th>
-                    <th style={{ ...th, textAlign: 'center' as const }}>Schedule</th>
-                    <th style={{ ...th, textAlign: 'right' as const }}>Added</th>
-                    <th style={{ ...th, textAlign: 'right' as const, paddingRight: 20 }}>Actions</th>
+                    <th style={{ ...th, textAlign: 'right' }}>Articles</th>
+                    <th style={{ ...th, textAlign: 'right' }}>Published</th>
+                    <th style={{ ...th, textAlign: 'right' }}>Pipeline</th>
+                    <th style={{ ...th, textAlign: 'center' }}>Schedule</th>
+                    <th style={{ ...th, textAlign: 'right' }}>Added</th>
+                    <th style={{ ...th, textAlign: 'right', paddingRight: 20 }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -489,22 +491,22 @@ export default function ClientsClient({ initialClients }: { initialClients: Clie
                         <td style={{ ...td, color: '#8e8ea0', fontFamily: 'monospace', fontSize: 12 }}>
                           {c.publish_platform || '—'}
                         </td>
-                        <td style={{ ...td, textAlign: 'right' as const, fontFamily: 'monospace', color: '#ececec', fontWeight: 600 }}>
+                        <td style={{ ...td, textAlign: 'right', fontFamily: 'monospace', color: '#ececec', fontWeight: 600 }}>
                           {c.stats.total}
                         </td>
-                        <td style={{ ...td, textAlign: 'right' as const, fontFamily: 'monospace', color: '#10a37f' }}>
+                        <td style={{ ...td, textAlign: 'right', fontFamily: 'monospace', color: '#10a37f' }}>
                           {c.stats.published}
                         </td>
-                        <td style={{ ...td, textAlign: 'right' as const, fontFamily: 'monospace', color: '#f59e0b' }}>
+                        <td style={{ ...td, textAlign: 'right', fontFamily: 'monospace', color: '#f59e0b' }}>
                           {c.stats.inPipeline}
                         </td>
-                        <td style={{ ...td, textAlign: 'center' as const }}>
+                        <td style={{ ...td, textAlign: 'center' }}>
                           <span style={{ fontSize: 11, color: '#8e8ea0', fontFamily: 'monospace' }}>{c.schedule || '—'}</span>
                         </td>
-                        <td style={{ ...td, textAlign: 'right' as const, color: '#4a4a4a', fontFamily: 'monospace', fontSize: 11 }}>
+                        <td style={{ ...td, textAlign: 'right', color: '#4a4a4a', fontFamily: 'monospace', fontSize: 11 }}>
                           {timeAgo(c.created_at)}
                         </td>
-                        <td style={{ ...td, textAlign: 'right' as const, paddingRight: 20 }}>
+                        <td style={{ ...td, textAlign: 'right', paddingRight: 20 }}>
                           <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                             <a href={`/client/${c.id}`}
                               style={{ padding: '4px 10px', background: '#2a2a2a', border: '1px solid #3a3a3a', borderRadius: 5, color: '#8e8ea0', fontSize: 11, textDecoration: 'none', fontFamily: 'inherit' }}>
@@ -531,11 +533,9 @@ export default function ClientsClient({ initialClients }: { initialClients: Clie
               </table>
             </div>
           )}
-
         </div>
       </div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </Layout>
   )
 }
-

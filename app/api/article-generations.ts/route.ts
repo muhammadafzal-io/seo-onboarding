@@ -1,7 +1,3 @@
-// app/api/article-generations/route.ts
-// GET /api/article-generations?root_id=123&keyword=pure+water
-// Returns all versions (generations) of an article grouped by root id or keyword
-
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
@@ -12,7 +8,7 @@ const sb = createClient(
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
-  const rootId  = searchParams.get('root_id')
+  const rootId = searchParams.get('root_id')
   const keyword = searchParams.get('keyword')
 
   if (!rootId && !keyword) {
@@ -26,7 +22,6 @@ export async function GET(req: NextRequest) {
 
   if (rootId) {
     const id = Number(rootId)
-    // Fetch both the root article AND any article whose parent_article_id = root
     query = query.or(`id.eq.${id},parent_article_id.eq.${id}`)
   } else if (keyword) {
     query = query.ilike('keyword', keyword!)

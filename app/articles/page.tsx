@@ -14,7 +14,7 @@ function Badge({ status }: { status: string }) {
     published: { bg: '#0d2e26', color: '#10a37f' },
     approved: { bg: '#1a2e1a', color: '#4ade80' },
     written: { bg: '#1a1a2e', color: '#a78bfa' },
-    processing: { bg: '#2a1f0a', color: '#f59e0b' },  
+    processing: { bg: '#2a1f0a', color: '#f59e0b' },
     scouted: { bg: '#0f1e2e', color: '#60a5fa' },
     failed: { bg: '#2a1515', color: '#f87171' },
     need_revision: { bg: '#2a1f2a', color: '#d946ef' },
@@ -35,12 +35,12 @@ function timeAgo(d: string) {
   const h = Math.floor(m / 60)
   if (h < 24) return `${h}h ago`
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-} 
+}
 
 const STATUSES = ['All', 'Scouted', 'Processing', 'Written', 'Approved', 'Published', 'Failed']
 const PAGE_SIZE = 10
 
-export default function ArticlesPage() { 
+export default function ArticlesPage() {
   const [articles, setArticles] = useState<any[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -94,7 +94,7 @@ export default function ArticlesPage() {
       q = q.or(orParts.join(','))
     }
 
-    const { data, count } = await q 
+    const { data, count } = await q
     setArticles(data || [])
     setTotal(count || 0)
     setLoading(false)
@@ -106,7 +106,7 @@ export default function ArticlesPage() {
     const ch = sb.channel('articles-page-rt')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => fetchData())
       .subscribe()
-    return () => { sb.removeChannel(ch) } 
+    return () => { sb.removeChannel(ch) }
   }, [fetchData])
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
@@ -220,6 +220,5 @@ export default function ArticlesPage() {
         </div>
       </Card>
     </Layout>
-
   )
 }
