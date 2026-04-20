@@ -7,6 +7,7 @@ const sb = createClient(
 )
 
 export async function GET() {
+  console.log('hello from clients api route')
   const { data, error } = await sb
     .from('clients')
     .select(`

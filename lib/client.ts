@@ -249,7 +249,7 @@ export async function fetchTopPages(
     metrics: [
       { name: 'screenPageViews' }, { name: 'sessions' },
       { name: 'bounceRate' },      { name: 'averageSessionDuration' },
-      { name: 'entrances' },
+      { name: 'totalUsers' },
     ],
     orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
     limit,
@@ -257,7 +257,7 @@ export async function fetchTopPages(
 
   const rows = parseRows(report,
     ['pagePath', 'pageTitle'],
-    ['pageviews', 'uniquePageviews', 'bounceRate', 'avgTime', 'entrances']
+    ['pageviews', 'sessions', 'bounceRate', 'avgTime', 'uniquePageviews']
   )
 
   return rows.map(r => ({
@@ -267,7 +267,7 @@ export async function fetchTopPages(
     uniquePageviews: Number(r.uniquePageviews),
     bounceRate:      parseFloat((Number(r.bounceRate) * 100).toFixed(1)),
     avgTimeOnPage:   Number(r.avgTime),
-    entrances:       Number(r.entrances),
+    entrances: 0,
     exitRate:        0,
   }))
 }
