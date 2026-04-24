@@ -21,7 +21,10 @@ function Badge({ status }: { status: string }) {
   }
   const cfg = map[status.toLowerCase()] || { bg: '#2a2a2a', color: '#8e8ea0' }
   return (
-    <span style={{ display: 'inline-flex', padding: '2px 8px', borderRadius: 0, fontSize: 11, fontWeight: 500, fontFamily: 'monospace', background: cfg.bg, color: cfg.color }}>
+      <span
+          className="inline-flex py-[2px] px-[8px] rounded-none text-[11px] font-medium font-mono"
+          style={{ background: cfg.bg, color: cfg.color }}
+      >
       {status}
     </span>
   )
@@ -49,8 +52,8 @@ export default function ArticlesPage() {
   const [page, setPage] = useState(1)
 
   const sb = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
   const fetchData = useCallback(async () => {
@@ -64,9 +67,9 @@ export default function ArticlesPage() {
 
     if (search.trim()) {
       const { data: matchedClients } = await sb
-        .from('clients')
-        .select('id')
-        .ilike('name', `%${search.trim()}%`)
+          .from('clients')
+          .select('id')
+          .ilike('name', `%${search.trim()}%`)
 
       if (matchedClients && matchedClients.length > 0) {
         matchingClientIds = matchedClients.map((c: any) => c.id)
@@ -74,9 +77,9 @@ export default function ArticlesPage() {
     }
 
     let q = sb.from('articles')
-      .select('id, keyword, meta_title, status, target_word_count, content_type, updated_at, wp_url, clients(name, domain)', { count: 'exact' })
-      .order('updated_at', { ascending: false })
-      .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
+        .select('id, keyword, meta_title, status, target_word_count, content_type, updated_at, wp_url, clients(name, domain)', { count: 'exact' })
+        .order('updated_at', { ascending: false })
+        .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
 
     if (status !== 'All') q = q.eq('status', status.toLowerCase())
 
@@ -104,121 +107,142 @@ export default function ArticlesPage() {
 
   useEffect(() => {
     const ch = sb.channel('articles-page-rt')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => fetchData())
-      .subscribe()
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => fetchData())
+        .subscribe()
     return () => { sb.removeChannel(ch) }
   }, [fetchData])
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
-  const styles = {
-    page: { minHeight: '100vh', background: '#212121', color: '#ececec', fontFamily: "'Instrument Sans', system-ui, sans-serif", padding: 24 },
-    card: { background: '#2f2f2f', border: '1px solid #3f3f3f', borderRadius: 12, padding: 20 },
-    inp: { background: '#2a2a2a', border: '1px solid #3f3f3f', borderRadius: 7, padding: '7px 12px', color: '#ececec', fontSize: 13, outline: 'none', fontFamily: 'inherit' } as React.CSSProperties,
-    th: { padding: '8px 12px', textAlign: 'left' as const, color: '#6b6b7b', fontSize: 11, fontFamily: 'monospace', textTransform: 'uppercase' as const, letterSpacing: '0.06em', whiteSpace: 'nowrap' as const },
-    td: { padding: '10px 12px', borderBottom: '1px solid #2a2a2a', color: '#8e8ea0', fontSize: 13 },
-    pgBtn: (active: boolean) => ({ width: 26, height: 26, borderRadius: 5, border: `1px solid ${active ? '#10a37f' : '#3f3f3f'}`, background: active ? '#10a37f' : 'transparent', color: active ? '#fff' : '#8e8ea0', cursor: 'pointer', fontSize: 12, display: 'flex' as const, alignItems: 'center' as const, justifyContent: 'center' as const }),
-  }
+  // Shared Table Classes
+  const thClass = "py-[8px] px-[12px] text-left text-[#6b6b7b] text-[11px] font-mono uppercase tracking-[0.06em] whitespace-nowrap"
+  const tdClass = "py-[10px] px-[12px] border-b border-[#2a2a2a] text-[#8e8ea0] text-[13px]"
 
   return (
-    <Layout title=' Articles' >
-      <Card>
-
-        <div style={styles.page}>
-          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-                  <a href="/dashboard" style={{ fontSize: 13, color: '#6b6b7b', textDecoration: 'none' }}>← Dashboard</a>
-                </div>
-                <h2 style={{ fontSize: 20, fontWeight: 600, color: '#ececec', letterSpacing: '-0.02em', marginBottom: 4 }}>Articles</h2>
-                <p style={{ fontSize: 13, color: '#8e8ea0' }}>{total.toLocaleString()} total articles</p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', background: '#0d2e26', border: '1px solid #155e4a', borderRadius: 7 }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10a37f' }} />
-                <span style={{ fontSize: 11, color: '#10a37f', fontFamily: 'monospace' }}>Live updates</span>
-              </div>
-            </div>
-
-            <div style={styles.card}>
-              {/* Filters */}
-              <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-                <input
-                  value={search}
-                  onChange={e => { setSearch(e.target.value); setPage(1) }}
-                  placeholder="Search keyword, title, or client name..."
-                  style={{ ...styles.inp, flex: 1, minWidth: 200 }}
-                />
-                {STATUSES.map(s => (
-                  <button key={s} onClick={() => { setStatus(s); setPage(1) }} style={{
-                    padding: '5px 10px', borderRadius: 6, border: '1px solid #3f3f3f',
-                    background: status === s ? '#0d2e26' : '#2a2a2a',
-                    color: status === s ? '#10a37f' : '#8e8ea0',
-                    fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .12s',
-                  }}>{s}</button>
-                ))}
-              </div>
-
-              {/* Table */}
-              <div style={{ overflowX: 'auto' }}>
-                {loading ? (
-                  <div style={{ padding: '48px 0', textAlign: 'center', color: '#6b6b7b', fontSize: 13 }}>Loading...</div>
-                ) : articles.length === 0 ? (
-                  <div style={{ padding: '48px 0', textAlign: 'center', color: '#6b6b7b', fontSize: 13 }}>
-                    {search || status !== 'All' ? 'No articles match your filters' : 'No articles yet — submit a client to start'}
+      <Layout title="Articles">
+        <Card>
+          <div className="min-h-screen bg-[#212121] text-[#ececec] [font-family:'Instrument_Sans',system-ui,sans-serif] p-[24px]">
+            <div className="max-w-[1200px] mx-auto">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-[20px]">
+                <div>
+                  <div className="flex items-center gap-[12px] mb-[4px]">
+                    <a href="/dashboard" className="text-[13px] text-[#6b6b7b] no-underline hover:text-[#ececec] transition-colors">← Dashboard</a>
                   </div>
-                ) : (
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr style={{ borderBottom: '1px solid #3f3f3f' }}>
-                        {['ID', 'Client', 'Keyword', 'Status', 'Words', 'Type', 'Updated', 'Link'].map(h => (
-                          <th key={h} style={styles.th}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {articles.map(row => {
-                        const client = Array.isArray(row.clients) ? row.clients[0] : row.clients
-                        return (
-                          <tr key={row.id} style={{ cursor: 'default' }}>
-                            <td style={{ ...styles.td, color: '#6b6b7b', fontFamily: 'monospace', fontSize: 11 }}>#{row.id}</td>
-                            <td style={{ ...styles.td, color: '#ececec', fontWeight: 500 }}>{client?.name || client?.domain || '—'}</td>
-                            <td style={{ ...styles.td, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.keyword}</td>
-                            <td style={styles.td}><Badge status={row.status} /></td>
-                            <td style={{ ...styles.td, fontFamily: 'monospace', fontSize: 12 }}>{(row.target_word_count || 0).toLocaleString()}</td>
-                            <td style={styles.td}>{row.content_type || '—'}</td>
-                            <td style={{ ...styles.td, fontFamily: 'monospace', fontSize: 11, color: '#6b6b7b' }}>{timeAgo(row.updated_at)}</td>
-                            <td style={styles.td}>
-                              {row.wp_url && (
-                                <a href={row.wp_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#10a37f', textDecoration: 'none', fontFamily: 'monospace' }}>↗ View</a>
-                              )}
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                )}
+                  <h2 className="text-[20px] font-semibold text-[#ececec] tracking-[-0.02em] mb-[4px]">Articles</h2>
+                  <p className="text-[13px] text-[#8e8ea0] m-0">{total.toLocaleString()} total articles</p>
+                </div>
+                <div className="flex items-center gap-[6px] py-[5px] px-[12px] bg-[#0d2e26] border border-[#155e4a] rounded-[7px]">
+                  <div className="w-[6px] h-[6px] rounded-full bg-[#10a37f]" />
+                  <span className="text-[11px] text-[#10a37f] font-mono">Live updates</span>
+                </div>
               </div>
 
-              {/* Pagination */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14, paddingTop: 12, borderTop: '1px solid #2a2a2a' }}>
-                <span style={{ fontSize: 11, color: '#6b6b7b', fontFamily: 'monospace' }}>
+              <div className="bg-[#2f2f2f] border border-[#3f3f3f] rounded-[12px] p-[20px]">
+                {/* Filters */}
+                <div className="flex gap-[8px] mb-[14px] flex-wrap">
+                  <input
+                      value={search}
+                      onChange={e => { setSearch(e.target.value); setPage(1) }}
+                      placeholder="Search keyword, title, or client name..."
+                      className="flex-1 min-w-[200px] bg-[#2a2a2a] border border-[#3f3f3f] rounded-[7px] py-[7px] px-[12px] text-[#ececec] text-[13px] outline-none font-inherit focus:border-[#10a37f] transition-colors"
+                  />
+                  {STATUSES.map(s => (
+                      <button
+                          key={s}
+                          onClick={() => { setStatus(s); setPage(1) }}
+                          className={`py-[5px] px-[10px] rounded-[6px] border border-[#3f3f3f] text-[12px] cursor-pointer font-inherit transition-all duration-[120ms] hover:brightness-110 ${
+                              status === s
+                                  ? 'bg-[#0d2e26] text-[#10a37f]'
+                                  : 'bg-[#2a2a2a] text-[#8e8ea0]'
+                          }`}
+                      >
+                        {s}
+                      </button>
+                  ))}
+                </div>
+
+                {/* Table */}
+                <div className="overflow-x-auto">
+                  {loading ? (
+                      <div className="py-[48px] text-center text-[#6b6b7b] text-[13px]">Loading...</div>
+                  ) : articles.length === 0 ? (
+                      <div className="py-[48px] text-center text-[#6b6b7b] text-[13px]">
+                        {search || status !== 'All' ? 'No articles match your filters' : 'No articles yet — submit a client to start'}
+                      </div>
+                  ) : (
+                      <table className="w-full border-collapse">
+                        <thead>
+                        <tr className="border-b border-[#3f3f3f]">
+                          {['ID', 'Client', 'Keyword', 'Status', 'Words', 'Type', 'Updated', 'Link'].map(h => (
+                              <th key={h} className={thClass}>{h}</th>
+                          ))}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {articles.map(row => {
+                          const client = Array.isArray(row.clients) ? row.clients[0] : row.clients
+                          return (
+                              <tr key={row.id} className="cursor-default hover:bg-[#2a2a2a] transition-colors">
+                                <td className={`${tdClass} text-[#6b6b7b] font-mono text-[11px]`}>#{row.id}</td>
+                                <td className={`${tdClass} text-[#ececec] font-medium`}>{client?.name || client?.domain || '—'}</td>
+                                <td className={`${tdClass} max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap`}>{row.keyword}</td>
+                                <td className={tdClass}><Badge status={row.status} /></td>
+                                <td className={`${tdClass} font-mono text-[12px]`}>{(row.target_word_count || 0).toLocaleString()}</td>
+                                <td className={tdClass}>{row.content_type || '—'}</td>
+                                <td className={`${tdClass} font-mono text-[11px] text-[#6b6b7b]`}>{timeAgo(row.updated_at)}</td>
+                                <td className={tdClass}>
+                                  {row.wp_url && (
+                                      <a href={row.wp_url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-[#10a37f] no-underline font-mono hover:underline">↗ View</a>
+                                  )}
+                                </td>
+                              </tr>
+                          )
+                        })}
+                        </tbody>
+                      </table>
+                  )}
+                </div>
+
+                {/* Pagination */}
+                <div className="flex items-center justify-between mt-[14px] pt-[12px] border-t border-[#2a2a2a]">
+                <span className="text-[11px] text-[#6b6b7b] font-mono">
                   {total > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)} of ${total.toLocaleString()}` : '0 results'}
                 </span>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={styles.pgBtn(false)}>‹</button>
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map(p => (
-                    <button key={p} onClick={() => setPage(p)} style={styles.pgBtn(page === p)}>{p}</button>
-                  ))}
-                  <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} style={styles.pgBtn(false)}>›</button>
+                  <div className="flex gap-[4px]">
+                    <button
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        className="w-[26px] h-[26px] rounded-[5px] border border-[#3f3f3f] bg-transparent text-[#8e8ea0] cursor-pointer text-[12px] flex items-center justify-center transition-colors hover:bg-[#333] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      ‹
+                    </button>
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map(p => (
+                        <button
+                            key={p}
+                            onClick={() => setPage(p)}
+                            className={`w-[26px] h-[26px] rounded-[5px] border cursor-pointer text-[12px] flex items-center justify-center transition-colors ${
+                                page === p
+                                    ? 'border-[#10a37f] bg-[#10a37f] text-white'
+                                    : 'border-[#3f3f3f] bg-transparent text-[#8e8ea0] hover:bg-[#333]'
+                            }`}
+                        >
+                          {p}
+                        </button>
+                    ))}
+                    <button
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        disabled={page >= totalPages}
+                        className="w-[26px] h-[26px] rounded-[5px] border border-[#3f3f3f] bg-transparent text-[#8e8ea0] cursor-pointer text-[12px] flex items-center justify-center transition-colors hover:bg-[#333] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      ›
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </Card>
-    </Layout>
+        </Card>
+      </Layout>
   )
 }

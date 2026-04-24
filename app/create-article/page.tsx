@@ -6,8 +6,8 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
 const sb = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
 // ── Types ──────────────────────────────────────────────────────
@@ -26,8 +26,8 @@ type SeoData = {
 
 // ── Keyword search dropdown ────────────────────────────────────
 function KeywordDropdown({
-  onSelect,
-}: {
+                           onSelect,
+                         }: {
   onSelect: (kw: KeywordOption) => void
 }) {
   const [query,    setQuery]    = useState('')
@@ -51,11 +51,11 @@ function KeywordDropdown({
     if (q.length < 2) { setResults([]); return }
     setLoading(true)
     const { data } = await sb.from('keywords')
-      .select('id, keyword, search_volumes, query_score, competition, top_snippets, related_keywords, status, clients(id, name, domain)')
-      .ilike('keyword', `%${q}%`)
-      .not('status', 'eq', 'used')
-      .order('search_volumes', { ascending: false })
-      .limit(12)
+        .select('id, keyword, search_volumes, query_score, competition, top_snippets, related_keywords, status, clients(id, name, domain)')
+        .ilike('keyword', `%${q}%`)
+        .not('status', 'eq', 'used')
+        .order('search_volumes', { ascending: false })
+        .limit(12)
     setResults((data || []) as any)
     setLoading(false)
     setOpen(true)
@@ -75,84 +75,81 @@ function KeywordDropdown({
     onSelect(kw)
   }
 
-  const s: React.CSSProperties = { background: '#2a2a2a', border: '1px solid #3f3f3f', borderRadius: 8, padding: '9px 12px', color: '#ececec', fontSize: 14, outline: 'none', fontFamily: 'inherit', width: '100%' }
-
   return (
-    <div ref={wrapRef} style={{ position: 'relative' }}>
-      <div style={{ position: 'relative' }}>
-        <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#6b6b7b', fontSize: 14, pointerEvents: 'none' }}>⌕</span>
-        <input
-          value={query}
-          onChange={e => handleInput(e.target.value)}
-          onFocus={() => query.length >= 2 && setOpen(true)}
-          placeholder="Search and select a keyword..."
-          style={{ ...s, paddingLeft: 34 }}
-        />
-        {loading && (
-          <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, borderRadius: '50%', border: '2px solid #3f3f3f', borderTopColor: '#10a37f', animation: 'spin 0.7s linear infinite' }} />
-        )}
-        {selected && (
-          <button onClick={() => { setSelected(null); setQuery(''); setResults([]); }}
-            style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#6b6b7b', cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>
-            ✕
-          </button>
-        )}
-      </div>
+      <div ref={wrapRef} className="relative">
+        <div className="relative">
+          <span className="absolute left-[12px] top-1/2 -translate-y-1/2 text-[#6b6b7b] text-[14px] pointer-events-none">⌕</span>
+          <input
+              value={query}
+              onChange={e => handleInput(e.target.value)}
+              onFocus={() => query.length >= 2 && setOpen(true)}
+              placeholder="Search and select a keyword..."
+              className="w-full bg-[#2a2a2a] border border-[#3f3f3f] rounded-[8px] py-[9px] pr-[12px] pl-[34px] text-[#ececec] text-[14px] outline-none font-inherit transition-colors focus:border-[#10a37f]"
+          />
+          {loading && (
+              <div className="absolute right-[12px] top-1/2 -translate-y-1/2 w-[14px] h-[14px] rounded-full border-2 border-[#3f3f3f] border-t-[#10a37f] animate-spin" />
+          )}
+          {selected && (
+              <button onClick={() => { setSelected(null); setQuery(''); setResults([]); }}
+                      className="absolute right-[12px] top-1/2 -translate-y-1/2 bg-transparent border-none text-[#6b6b7b] cursor-pointer text-[14px] leading-none hover:text-[#ececec] transition-colors">
+                ✕
+              </button>
+          )}
+        </div>
 
-      {open && results.length > 0 && (
-        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, background: '#2a2a2a', border: '1px solid #3f3f3f', borderRadius: 10, marginTop: 4, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
-          <div style={{ padding: '8px 12px 6px', borderBottom: '1px solid #3f3f3f' }}>
-            <span style={{ fontSize: 11, color: '#6b6b7b', fontFamily: 'monospace' }}>
+        {open && results.length > 0 && (
+            <div className="absolute top-full left-0 right-0 z-50 bg-[#2a2a2a] border border-[#3f3f3f] rounded-[10px] mt-[4px] overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+              <div className="py-[8px] px-[12px] pb-[6px] border-b border-[#3f3f3f]">
+            <span className="text-[11px] text-[#6b6b7b] font-mono">
               {results.length} keywords found — sorted by search volume
             </span>
-          </div>
-          <div style={{ maxHeight: 320, overflowY: 'auto' }}>
-            {results.map(kw => {
-              const client = Array.isArray(kw.clients) ? kw.clients[0] : kw.clients
-              return (
-                <div key={kw.id} onClick={() => pick(kw)}
-                  style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #333', display: 'flex', alignItems: 'center', gap: 12, transition: 'background .1s' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#333')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, color: '#ececec', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {kw.keyword}
-                    </div>
-                    {client && (
-                      <div style={{ fontSize: 11, color: '#6b6b7b', marginTop: 2 }}>{client.name || client.domain}</div>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
-                    {kw.search_volumes > 0 && (
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 12, color: '#ececec', fontFamily: 'monospace', fontWeight: 500 }}>{kw.search_volumes.toLocaleString()}</div>
-                        <div style={{ fontSize: 9, color: '#6b6b7b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>vol/mo</div>
-                      </div>
-                    )}
-                    {kw.query_score > 0 && (
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 12, color: '#f59e0b', fontFamily: 'monospace', fontWeight: 500 }}>{Number(kw.query_score).toFixed(2)}</div>
-                        <div style={{ fontSize: 9, color: '#6b6b7b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>score</div>
-                      </div>
-                    )}
-                    <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4, fontFamily: 'monospace', background: kw.status === 'researched' ? '#2a1f0a' : '#0f1e2e', color: kw.status === 'researched' ? '#f59e0b' : '#60a5fa', alignSelf: 'center' }}>
+              </div>
+              <div className="max-h-[320px] overflow-y-auto">
+                {results.map(kw => {
+                  const client = Array.isArray(kw.clients) ? kw.clients[0] : kw.clients
+                  return (
+                      <div key={kw.id} onClick={() => pick(kw)}
+                           className="py-[10px] px-[14px] cursor-pointer border-b border-[#333] flex items-center gap-[12px] transition-colors hover:bg-[#333]"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[13px] text-[#ececec] font-medium overflow-hidden text-ellipsis whitespace-nowrap">
+                            {kw.keyword}
+                          </div>
+                          {client && (
+                              <div className="text-[11px] text-[#6b6b7b] mt-[2px]">{client.name || client.domain}</div>
+                          )}
+                        </div>
+                        <div className="flex gap-[10px] shrink-0">
+                          {kw.search_volumes > 0 && (
+                              <div className="text-right">
+                                <div className="text-[12px] text-[#ececec] font-mono font-medium">{kw.search_volumes.toLocaleString()}</div>
+                                <div className="text-[9px] text-[#6b6b7b] uppercase tracking-[0.05em]">vol/mo</div>
+                              </div>
+                          )}
+                          {kw.query_score > 0 && (
+                              <div className="text-right">
+                                <div className="text-[12px] text-[#f59e0b] font-mono font-medium">{Number(kw.query_score).toFixed(2)}</div>
+                                <div className="text-[9px] text-[#6b6b7b] uppercase tracking-[0.05em]">score</div>
+                              </div>
+                          )}
+                          <span className="text-[9px] py-[2px] px-[6px] rounded-[4px] font-mono self-center"
+                                style={{ background: kw.status === 'researched' ? '#2a1f0a' : '#0f1e2e', color: kw.status === 'researched' ? '#f59e0b' : '#60a5fa' }}>
                       {kw.status}
                     </span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
+                        </div>
+                      </div>
+                  )
+                })}
+              </div>
+            </div>
+        )}
 
-      {open && !loading && results.length === 0 && query.length >= 2 && (
-        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, background: '#2a2a2a', border: '1px solid #3f3f3f', borderRadius: 10, marginTop: 4, padding: '20px', textAlign: 'center' }}>
-          <p style={{ color: '#6b6b7b', fontSize: 13 }}>No keywords found for "{query}"</p>
-        </div>
-      )}
-    </div>
+        {open && !loading && results.length === 0 && query.length >= 2 && (
+            <div className="absolute top-full left-0 right-0 z-50 bg-[#2a2a2a] border border-[#3f3f3f] rounded-[10px] mt-[4px] p-[20px] text-center">
+              <p className="text-[#6b6b7b] text-[13px] m-0">No keywords found for "{query}"</p>
+            </div>
+        )}
+      </div>
   )
 }
 
@@ -166,105 +163,101 @@ function SeoPanel({ keyword }: { keyword: KeywordOption | null }) {
   const diffColor     = competition !== null ? (competition > 66 ? '#f87171' : competition > 33 ? '#f59e0b' : '#10a37f') : '#6b6b7b'
   const diffLabel     = competition !== null ? (competition > 66 ? 'High' : competition > 33 ? 'Medium' : 'Low') : '—'
 
-  const card: React.CSSProperties     = { background: '#262626', border: '1px solid #3f3f3f', borderRadius: 10, padding: 16 }
-  const label: React.CSSProperties    = { fontSize: 10, color: '#6b6b7b', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, display: 'block' }
-  const metricNum: React.CSSProperties = { fontSize: 24, fontWeight: 600, color: '#ececec', letterSpacing: '-0.03em', lineHeight: 1 }
-
   return (
-    <div style={{ background: '#2a2a2a', border: '1px solid #3f3f3f', borderRadius: 12, padding: 20, marginTop: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-        <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10a37f' }} />
-        <span style={{ fontSize: 12, color: '#10a37f', fontFamily: 'monospace', fontWeight: 500 }}>SEO Data</span>
-        <span style={{ fontSize: 11, color: '#4a4a4a', fontFamily: 'monospace', marginLeft: 'auto' }}>
+      <div className="bg-[#2a2a2a] border border-[#3f3f3f] rounded-[12px] p-[20px] mt-[20px]">
+        <div className="flex items-center gap-[8px] mb-[16px]">
+          <div className="w-[6px] h-[6px] rounded-full bg-[#10a37f]" />
+          <span className="text-[12px] text-[#10a37f] font-mono font-medium">SEO Data</span>
+          <span className="text-[11px] text-[#4a4a4a] font-mono ml-auto">
           {keyword.search_volumes > 0 ? 'From database cache' : 'No data yet — will be fetched by WF1'}
         </span>
-      </div>
+        </div>
 
-      {/* Metrics row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
-        <div style={card}>
-          <span style={label}>Search Volume</span>
-          <div style={metricNum}>{keyword.search_volumes > 0 ? keyword.search_volumes.toLocaleString() : '—'}</div>
-          <div style={{ fontSize: 10, color: '#6b6b7b', marginTop: 4 }}>per month</div>
-        </div>
-        <div style={card}>
-          <span style={label}>Query Score</span>
-          <div style={{ ...metricNum, color: '#f59e0b' }}>{keyword.query_score ? Number(keyword.query_score).toFixed(2) : '—'}</div>
-          <div style={{ fontSize: 10, color: '#6b6b7b', marginTop: 4 }}>0 = easy, 1 = hard</div>
-        </div>
-        <div style={card}>
-          <span style={label}>Competition</span>
-          <div style={{ ...metricNum, color: diffColor }}>{diffLabel}</div>
-          {competition !== null && (
-            <div style={{ height: 3, background: '#333', borderRadius: 2, marginTop: 8, overflow: 'hidden' }}>
-              <div style={{ width: `${competition}%`, height: '100%', background: diffColor, borderRadius: 2 }} />
-            </div>
-          )}
-        </div>
-        <div style={card}>
-          <span style={label}>Status</span>
-          <div style={{ ...metricNum, fontSize: 18, color: keyword.status === 'researched' ? '#f59e0b' : keyword.status === 'used' ? '#10a37f' : '#60a5fa' }}>
-            {keyword.status}
+        {/* Metrics row */}
+        <div className="grid grid-cols-4 gap-[12px] mb-[16px]">
+          <div className="bg-[#262626] border border-[#3f3f3f] rounded-[10px] p-[16px]">
+            <span className="text-[10px] text-[#6b6b7b] font-mono uppercase tracking-[0.08em] mb-[4px] block">Search Volume</span>
+            <div className="text-[24px] font-semibold text-[#ececec] tracking-[-0.03em] leading-none">{keyword.search_volumes > 0 ? keyword.search_volumes.toLocaleString() : '—'}</div>
+            <div className="text-[10px] text-[#6b6b7b] mt-[4px]">per month</div>
           </div>
-          <div style={{ fontSize: 10, color: '#6b6b7b', marginTop: 4 }}>pipeline status</div>
+          <div className="bg-[#262626] border border-[#3f3f3f] rounded-[10px] p-[16px]">
+            <span className="text-[10px] text-[#6b6b7b] font-mono uppercase tracking-[0.08em] mb-[4px] block">Query Score</span>
+            <div className="text-[24px] font-semibold text-[#f59e0b] tracking-[-0.03em] leading-none">{keyword.query_score ? Number(keyword.query_score).toFixed(2) : '—'}</div>
+            <div className="text-[10px] text-[#6b6b7b] mt-[4px]">0 = easy, 1 = hard</div>
+          </div>
+          <div className="bg-[#262626] border border-[#3f3f3f] rounded-[10px] p-[16px]">
+            <span className="text-[10px] text-[#6b6b7b] font-mono uppercase tracking-[0.08em] mb-[4px] block">Competition</span>
+            <div className="text-[24px] font-semibold tracking-[-0.03em] leading-none" style={{ color: diffColor }}>{diffLabel}</div>
+            {competition !== null && (
+                <div className="h-[3px] bg-[#333] rounded-[2px] mt-[8px] overflow-hidden">
+                  <div className="h-full rounded-[2px]" style={{ width: `${competition}%`, background: diffColor }} />
+                </div>
+            )}
+          </div>
+          <div className="bg-[#262626] border border-[#3f3f3f] rounded-[10px] p-[16px]">
+            <span className="text-[10px] text-[#6b6b7b] font-mono uppercase tracking-[0.08em] mb-[4px] block">Status</span>
+            <div className="text-[18px] font-semibold tracking-[-0.03em] leading-none" style={{ color: keyword.status === 'researched' ? '#f59e0b' : keyword.status === 'used' ? '#10a37f' : '#60a5fa' }}>
+              {keyword.status}
+            </div>
+            <div className="text-[10px] text-[#6b6b7b] mt-[4px]">pipeline status</div>
+          </div>
         </div>
-      </div>
 
-      {/* Two-column: SERP results + related keywords */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        {/* Two-column: SERP results + related keywords */}
+        <div className="grid grid-cols-2 gap-[12px]">
 
-        {/* Top SERP results */}
-        <div style={card}>
-          <span style={{ ...label, marginBottom: 10 }}>Top Competitors (SERP)</span>
-          {topSnippets.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {topSnippets.slice(0, 5).map((r: any, i: number) => (
-                <div key={i} style={{ borderBottom: '1px solid #333', paddingBottom: 8 }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 3 }}>
-                    <span style={{ fontSize: 10, color: '#6b6b7b', fontFamily: 'monospace', flexShrink: 0 }}>#{i + 1}</span>
-                    <span style={{ fontSize: 12, color: '#d1d1d1', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {/* Top SERP results */}
+          <div className="bg-[#262626] border border-[#3f3f3f] rounded-[10px] p-[16px]">
+            <span className="text-[10px] text-[#6b6b7b] font-mono uppercase tracking-[0.08em] mb-[10px] block">Top Competitors (SERP)</span>
+            {topSnippets.length > 0 ? (
+                <div className="flex flex-col gap-[10px]">
+                  {topSnippets.slice(0, 5).map((r: any, i: number) => (
+                      <div key={i} className="border-b border-[#333] pb-[8px]">
+                        <div className="flex items-baseline gap-[6px] mb-[3px]">
+                          <span className="text-[10px] text-[#6b6b7b] font-mono shrink-0">#{i + 1}</span>
+                          <span className="text-[12px] text-[#d1d1d1] font-medium overflow-hidden text-ellipsis whitespace-nowrap">
                       {r.title || r.link || 'Result'}
                     </span>
-                  </div>
-                  {(r.link || r.url) && (
-                    <div style={{ fontSize: 10, color: '#10a37f', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {(r.link || r.url).replace(/^https?:\/\//, '').split('/')[0]}
-                    </div>
-                  )}
-                  {r.snippet && (
-                    <div style={{ fontSize: 11, color: '#6b6b7b', marginTop: 3, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                      {r.snippet}
-                    </div>
-                  )}
+                        </div>
+                        {(r.link || r.url) && (
+                            <div className="text-[10px] text-[#10a37f] font-mono overflow-hidden text-ellipsis whitespace-nowrap">
+                              {(r.link || r.url).replace(/^https?:\/\//, '').split('/')[0]}
+                            </div>
+                        )}
+                        {r.snippet && (
+                            <div className="text-[11px] text-[#6b6b7b] mt-[3px] leading-[1.5] line-clamp-2">
+                              {r.snippet}
+                            </div>
+                        )}
+                      </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ padding: '16px 0', textAlign: 'center', color: '#4a4a4a', fontSize: 12 }}>
-              SERP data not yet fetched. WF1 will populate this on the next cycle.
-            </div>
-          )}
-        </div>
+            ) : (
+                <div className="py-[16px] text-center text-[#4a4a4a] text-[12px]">
+                  SERP data not yet fetched. WF1 will populate this on the next cycle.
+                </div>
+            )}
+          </div>
 
-        {/* Related keywords */}
-        <div style={card}>
-          <span style={{ ...label, marginBottom: 10 }}>Related Keywords</span>
-          {relatedKws.length > 0 ? (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {relatedKws.slice(0, 20).map((kw: string, i: number) => (
-                <span key={i} style={{ fontSize: 12, color: '#d1d1d1', background: '#333', padding: '3px 9px', borderRadius: 5, border: '1px solid #3f3f3f' }}>
+          {/* Related keywords */}
+          <div className="bg-[#262626] border border-[#3f3f3f] rounded-[10px] p-[16px]">
+            <span className="text-[10px] text-[#6b6b7b] font-mono uppercase tracking-[0.08em] mb-[10px] block">Related Keywords</span>
+            {relatedKws.length > 0 ? (
+                <div className="flex flex-wrap gap-[6px]">
+                  {relatedKws.slice(0, 20).map((kw: string, i: number) => (
+                      <span key={i} className="text-[12px] text-[#d1d1d1] bg-[#333] py-[3px] px-[9px] rounded-[5px] border border-[#3f3f3f]">
                   {typeof kw === 'string' ? kw : (kw as any).keyword || JSON.stringify(kw)}
                 </span>
-              ))}
-            </div>
-          ) : (
-            <div style={{ padding: '16px 0', textAlign: 'center', color: '#4a4a4a', fontSize: 12 }}>
-              Related keywords will appear here after WF1 runs.
-            </div>
-          )}
+                  ))}
+                </div>
+            ) : (
+                <div className="py-[16px] text-center text-[#4a4a4a] text-[12px]">
+                  Related keywords will appear here after WF1 runs.
+                </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
   )
 }
 
@@ -286,7 +279,7 @@ export default function CreateArticlePage() {
 
   useEffect(() => {
     sb.from('clients').select('id, name, domain').order('name')
-      .then(({ data }) => setClients(data || []))
+        .then(({ data }) => setClients(data || []))
   }, [])
 
   const handleKeywordSelect = (kw: KeywordOption) => {
@@ -305,11 +298,11 @@ export default function CreateArticlePage() {
 
     // Check if article already exists for this keyword + client
     const { data: existing } = await sb.from('articles')
-      .select('id, status')
-      .eq('client_id', Number(form.clientId))
-      .eq('keyword_normalized', selectedKw.keyword.toLowerCase())
-      .not('status', 'in', '("failed")')
-      .limit(1)
+        .select('id, status')
+        .eq('client_id', Number(form.clientId))
+        .eq('keyword_normalized', selectedKw.keyword.toLowerCase())
+        .not('status', 'in', '("failed")')
+        .limit(1)
 
     if (existing && existing.length > 0) {
       setError(`An article for "${selectedKw.keyword}" already exists (status: ${existing[0].status}). Duplicate creation prevented.`)
@@ -339,136 +332,136 @@ export default function CreateArticlePage() {
     setSubmitting(false)
   }
 
-  const inp: React.CSSProperties    = { background: '#2a2a2a', border: '1px solid #3f3f3f', borderRadius: 8, padding: '9px 12px', color: '#ececec', fontSize: 14, outline: 'none', fontFamily: 'inherit', width: '100%' }
-  const sel: React.CSSProperties    = { ...inp, appearance: 'none', cursor: 'pointer', paddingRight: 28 }
-  const label: React.CSSProperties  = { fontSize: 11, color: '#8e8ea0', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 6 }
+  // Input styles mapping
+  const inputClass = "w-full bg-[#2a2a2a] border border-[#3f3f3f] rounded-[8px] py-[9px] px-[12px] text-[#ececec] text-[14px] outline-none font-inherit transition-colors focus:border-[#10a37f]"
+  const selectClass = `${inputClass} appearance-none cursor-pointer pr-[28px]`
+  const labelClass = "text-[11px] text-[#8e8ea0] font-mono uppercase tracking-[0.06em] block mb-[6px]"
 
   if (submitted) return (
-    <div style={{ minHeight: '100vh', background: '#212121', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Instrument Sans', sans-serif" }}>
-      <div style={{ textAlign: 'center', maxWidth: 400 }}>
-        <div style={{ width: 56, height: 56, background: '#0d2e26', border: '1px solid #10a37f', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, margin: '0 auto 20px' }}>✓</div>
-        <h2 style={{ fontSize: 22, color: '#ececec', marginBottom: 8 }}>Article queued</h2>
-        <p style={{ color: '#8e8ea0', fontSize: 14, marginBottom: 24 }}>
-          "{selectedKw?.keyword}" has been added to the pipeline. WF2 will pick it up in the next cycle.
-        </p>
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-          <a href="/articles" style={{ padding: '9px 20px', background: '#10a37f', color: '#fff', borderRadius: 8, textDecoration: 'none', fontSize: 13, fontWeight: 600 }}>View Articles</a>
-          <button onClick={() => { setSubmitted(false); setSelectedKw(null); setForm(f => ({ ...f, targetAudience: '', notes: '' })) }}
-            style={{ padding: '9px 20px', background: 'transparent', color: '#8e8ea0', border: '1px solid #3f3f3f', borderRadius: 8, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
-            Create Another
-          </button>
+      <div className="min-h-screen bg-[#212121] flex items-center justify-center font-sans">
+        <div className="text-center max-w-[400px]">
+          <div className="w-[56px] h-[56px] bg-[#0d2e26] border border-[#10a37f] rounded-full flex items-center justify-center text-[24px] mx-auto mb-[20px]">✓</div>
+          <h2 className="text-[22px] text-[#ececec] mb-[8px]">Article queued</h2>
+          <p className="text-[#8e8ea0] text-[14px] mb-[24px]">
+            "{selectedKw?.keyword}" has been added to the pipeline. WF2 will pick it up in the next cycle.
+          </p>
+          <div className="flex gap-[10px] justify-center">
+            <a href="/articles" className="py-[9px] px-[20px] bg-[#10a37f] text-white rounded-[8px] no-underline text-[13px] font-semibold hover:bg-[#0e916f] transition-colors">View Articles</a>
+            <button onClick={() => { setSubmitted(false); setSelectedKw(null); setForm(f => ({ ...f, targetAudience: '', notes: '' })) }}
+                    className="py-[9px] px-[20px] bg-transparent text-[#8e8ea0] border border-[#3f3f3f] rounded-[8px] text-[13px] cursor-pointer font-inherit hover:text-[#ececec] hover:border-[#6b6b7b] transition-colors">
+              Create Another
+            </button>
+          </div>
         </div>
       </div>
-    </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#212121', color: '#ececec', fontFamily: "'Instrument Sans', system-ui, sans-serif", padding: 24 }}>
-      <div style={{ maxWidth: 900, margin: '0 auto' }}>
-        <a href="/articles" style={{ fontSize: 12, color: '#6b6b7b', textDecoration: 'none', display: 'block', marginBottom: 12 }}>← Articles</a>
-        <h1 style={{ fontSize: 22, fontWeight: 600, color: '#ececec', letterSpacing: '-0.025em', marginBottom: 4 }}>Create Article</h1>
-        <p style={{ fontSize: 13, color: '#8e8ea0', marginBottom: 28 }}>Select a researched keyword to queue a new article for generation.</p>
+      <div className="min-h-screen bg-[#212121] text-[#ececec] [font-family:'Instrument_Sans',system-ui,sans-serif] p-[24px]">
+        <div className="max-w-[900px] mx-auto">
+          <a href="/articles" className="text-[12px] text-[#6b6b7b] no-underline block mb-[12px] hover:text-[#ececec] transition-colors">← Articles</a>
+          <h1 className="text-[22px] font-semibold text-[#ececec] tracking-[-0.025em] mb-[4px]">Create Article</h1>
+          <p className="text-[13px] text-[#8e8ea0] mb-[28px]">Select a researched keyword to queue a new article for generation.</p>
 
-        <div style={{ background: '#2f2f2f', border: '1px solid #3f3f3f', borderRadius: 12, padding: 24 }}>
+          <div className="bg-[#2f2f2f] border border-[#3f3f3f] rounded-[12px] p-[24px]">
 
-          {/* Keyword selector */}
-          <div style={{ marginBottom: 20 }}>
-            <span style={label}>Select Keyword *</span>
-            <KeywordDropdown onSelect={handleKeywordSelect} />
+            {/* Keyword selector */}
+            <div className="mb-[20px]">
+              <span className={labelClass}>Select Keyword *</span>
+              <KeywordDropdown onSelect={handleKeywordSelect} />
+            </div>
+
+            {/* Form fields */}
+            <div className="grid grid-cols-2 gap-[16px]">
+
+              {/* Client */}
+              <div>
+                <span className={labelClass}>Client *</span>
+                <div className="relative">
+                  <select value={form.clientId} onChange={e => setForm(f => ({ ...f, clientId: e.target.value }))} className={selectClass}>
+                    <option value="">— Select client —</option>
+                    {clients.map(c => <option key={c.id} value={c.id}>{c.name || c.domain}</option>)}
+                  </select>
+                  <span className="absolute right-[10px] top-1/2 -translate-y-1/2 text-[#6b6b7b] text-[10px] pointer-events-none">▾</span>
+                </div>
+              </div>
+
+              {/* Content type */}
+              <div>
+                <span className={labelClass}>Content Type</span>
+                <div className="relative">
+                  <select value={form.contentType} onChange={e => setForm(f => ({ ...f, contentType: e.target.value }))} className={selectClass}>
+                    {['blog_post', 'how_to', 'listicle', 'landing_page', 'case_study', 'product_page'].map(t => (
+                        <option key={t} value={t}>{t.replace('_', ' ')}</option>
+                    ))}
+                  </select>
+                  <span className="absolute right-[10px] top-1/2 -translate-y-1/2 text-[#6b6b7b] text-[10px] pointer-events-none">▾</span>
+                </div>
+              </div>
+
+              {/* Word count */}
+              <div>
+                <span className={labelClass}>Target Word Count</span>
+                <div className="relative">
+                  <select value={form.targetWords} onChange={e => setForm(f => ({ ...f, targetWords: e.target.value }))} className={selectClass}>
+                    {['800', '1200', '1500', '2000', '2500', '3000'].map(w => (
+                        <option key={w} value={w}>{Number(w).toLocaleString()} words</option>
+                    ))}
+                  </select>
+                  <span className="absolute right-[10px] top-1/2 -translate-y-1/2 text-[#6b6b7b] text-[10px] pointer-events-none">▾</span>
+                </div>
+              </div>
+
+              {/* Language */}
+              <div>
+                <span className={labelClass}>Language</span>
+                <div className="relative">
+                  <select value={form.language} onChange={e => setForm(f => ({ ...f, language: e.target.value }))} className={selectClass}>
+                    {['English', 'Urdu', 'Arabic', 'Spanish', 'French', 'German'].map(l => (
+                        <option key={l}>{l}</option>
+                    ))}
+                  </select>
+                  <span className="absolute right-[10px] top-1/2 -translate-y-1/2 text-[#6b6b7b] text-[10px] pointer-events-none">▾</span>
+                </div>
+              </div>
+
+              {/* Target audience */}
+              <div className="col-span-2">
+                <span className={labelClass}>Target Audience</span>
+                <input value={form.targetAudience} onChange={e => setForm(f => ({ ...f, targetAudience: e.target.value }))}
+                       placeholder="e.g. small business owners, developers, healthcare professionals"
+                       className={inputClass} />
+              </div>
+
+              {/* Notes */}
+              <div className="col-span-2">
+                <span className={labelClass}>Additional Notes <span className="text-[#4a4a4a] normal-case tracking-normal text-[10px]">optional</span></span>
+                <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                          placeholder="Special instructions, tone notes, topics to avoid..."
+                          rows={3} className={`${inputClass} resize-y leading-[1.6]`} />
+              </div>
+            </div>
+
+            {/* Error */}
+            {error && (
+                <div className="mt-[16px] py-[10px] px-[14px] bg-[#2a1515] border border-[#5a2020] rounded-[8px] text-[#f87171] text-[13px] font-mono">
+                  ⚠ {error}
+                </div>
+            )}
+
+            {/* Submit */}
+            <div className="mt-[20px] flex gap-[10px] items-center">
+              <button onClick={handleSubmit} disabled={submitting || !selectedKw}
+                      className={`py-[10px] px-[24px] border-none rounded-[8px] text-[14px] font-semibold font-inherit transition-colors ${selectedKw ? 'bg-[#10a37f] text-white cursor-pointer hover:bg-[#0e916f]' : 'bg-[#2a2a2a] text-[#4a4a4a] cursor-not-allowed'}`}>
+                {submitting ? 'Queueing...' : '✦ Queue for Generation'}
+              </button>
+              <a href="/articles" className="text-[13px] text-[#6b6b7b] no-underline hover:text-[#ececec] transition-colors">Cancel</a>
+            </div>
           </div>
 
-          {/* Form fields */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-
-            {/* Client */}
-            <div>
-              <span style={label}>Client *</span>
-              <div style={{ position: 'relative' }}>
-                <select value={form.clientId} onChange={e => setForm(f => ({ ...f, clientId: e.target.value }))} style={sel}>
-                  <option value="">— Select client —</option>
-                  {clients.map(c => <option key={c.id} value={c.id}>{c.name || c.domain}</option>)}
-                </select>
-                <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#6b6b7b', fontSize: 10, pointerEvents: 'none' }}>▾</span>
-              </div>
-            </div>
-
-            {/* Content type */}
-            <div>
-              <span style={label}>Content Type</span>
-              <div style={{ position: 'relative' }}>
-                <select value={form.contentType} onChange={e => setForm(f => ({ ...f, contentType: e.target.value }))} style={sel}>
-                  {['blog_post', 'how_to', 'listicle', 'landing_page', 'case_study', 'product_page'].map(t => (
-                    <option key={t} value={t}>{t.replace('_', ' ')}</option>
-                  ))}
-                </select>
-                <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#6b6b7b', fontSize: 10, pointerEvents: 'none' }}>▾</span>
-              </div>
-            </div>
-
-            {/* Word count */}
-            <div>
-              <span style={label}>Target Word Count</span>
-              <div style={{ position: 'relative' }}>
-                <select value={form.targetWords} onChange={e => setForm(f => ({ ...f, targetWords: e.target.value }))} style={sel}>
-                  {['800', '1200', '1500', '2000', '2500', '3000'].map(w => (
-                    <option key={w} value={w}>{Number(w).toLocaleString()} words</option>
-                  ))}
-                </select>
-                <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#6b6b7b', fontSize: 10, pointerEvents: 'none' }}>▾</span>
-              </div>
-            </div>
-
-            {/* Language */}
-            <div>
-              <span style={label}>Language</span>
-              <div style={{ position: 'relative' }}>
-                <select value={form.language} onChange={e => setForm(f => ({ ...f, language: e.target.value }))} style={sel}>
-                  {['English', 'Urdu', 'Arabic', 'Spanish', 'French', 'German'].map(l => (
-                    <option key={l}>{l}</option>
-                  ))}
-                </select>
-                <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: '#6b6b7b', fontSize: 10, pointerEvents: 'none' }}>▾</span>
-              </div>
-            </div>
-
-            {/* Target audience */}
-            <div style={{ gridColumn: '1 / -1' }}>
-              <span style={label}>Target Audience</span>
-              <input value={form.targetAudience} onChange={e => setForm(f => ({ ...f, targetAudience: e.target.value }))}
-                placeholder="e.g. small business owners, developers, healthcare professionals"
-                style={inp} />
-            </div>
-
-            {/* Notes */}
-            <div style={{ gridColumn: '1 / -1' }}>
-              <span style={label}>Additional Notes <span style={{ color: '#4a4a4a', textTransform: 'none', letterSpacing: 0, fontSize: 10 }}>optional</span></span>
-              <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                placeholder="Special instructions, tone notes, topics to avoid..."
-                rows={3} style={{ ...inp, resize: 'vertical', lineHeight: 1.6 } as any} />
-            </div>
-          </div>
-
-          {/* Error */}
-          {error && (
-            <div style={{ marginTop: 16, padding: '10px 14px', background: '#2a1515', border: '1px solid #5a2020', borderRadius: 8, color: '#f87171', fontSize: 13, fontFamily: 'monospace' }}>
-              ⚠ {error}
-            </div>
-          )}
-
-          {/* Submit */}
-          <div style={{ marginTop: 20, display: 'flex', gap: 10, alignItems: 'center' }}>
-            <button onClick={handleSubmit} disabled={submitting || !selectedKw}
-              style={{ padding: '10px 24px', background: selectedKw ? '#10a37f' : '#2a2a2a', color: selectedKw ? '#fff' : '#4a4a4a', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: selectedKw ? 'pointer' : 'not-allowed', fontFamily: 'inherit', transition: 'background .15s' }}>
-              {submitting ? 'Queueing...' : '✦ Queue for Generation'}
-            </button>
-            <a href="/articles" style={{ fontSize: 13, color: '#6b6b7b', textDecoration: 'none' }}>Cancel</a>
-          </div>
+          {/* SEO Panel */}
+          <SeoPanel keyword={selectedKw} />
         </div>
-
-        {/* SEO Panel */}
-        <SeoPanel keyword={selectedKw} />
       </div>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
   )
 }

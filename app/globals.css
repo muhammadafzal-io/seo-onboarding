@@ -1,5 +1,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 1. Define your custom animations natively for Tailwind v4 */
+@theme {
+  --animate-kpi-fade: kpiFade 0.4s ease both;
+  --animate-live-pulse: livePulse 0.7s ease;
+
+  @keyframes kpiFade {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes livePulse {
+    0% { box-shadow: 0 0 0 0 rgba(16,163,127,0.5); }
+    70% { box-shadow: 0 0 0 8px rgba(16,163,127,0); }
+    100% { box-shadow: 0 0 0 0 rgba(16,163,127,0); }
+  }
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -7,11 +28,22 @@
 }
 
 :root {
-  --bg:       #f9f8f6;
+  /* Dashboard Dark Theme Variables (These overwrite the light theme to fix the white screen) */
+  --bg:       #212121;
+  --sb:       #171717;
+  --card:     #2f2f2f;
+  --border:   #3f3f3f;
+  --border2:  #2a2a2a;
+  --t1:       #ececec;
+  --t2:       #8e8ea0;
+  --t3:       #6b6b7b;
+  --acc:      #10a37f;
+  --acc-l:    #0d2e26;
+  --mono:     'DM Mono', monospace;
+
+  /* Your original variables kept as fallbacks */
   --bg2:      #f2f0ec;
   --surface:  #ffffff;
-  --border:   #e4e1db;
-  --border2:  #d0ccc4;
   --ink:      #18180f;
   --ink2:     #3a3830;
   --muted:    #8a8680;
@@ -28,7 +60,7 @@ html { font-size: 16px; }
 
 body {
   background: var(--bg);
-  color: var(--ink);
+  color: var(--t1); /* Updated to use dark mode text color */
   font-family: 'DM Sans', sans-serif;
   font-weight: 400;
   line-height: 1.6;
@@ -37,11 +69,11 @@ body {
 }
 
 ::selection {
-  background: var(--ink);
-  color: var(--bg);
+  background: var(--acc); /* Swapped to use accent color */
+  color: #ffffff;
 }
 
 /* scrollbar */
 ::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: var(--bg2); }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }

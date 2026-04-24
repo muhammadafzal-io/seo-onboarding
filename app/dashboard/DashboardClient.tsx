@@ -1,5 +1,4 @@
 'use client'
-// app/dashboard/DashboardClient.tsx
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@supabase/supabase-js'
@@ -20,17 +19,17 @@ function Badge({ status }: { status: string }) {
   }
   const cfg = map[status.toLowerCase()] || { bg: '#2a2a2a', color: '#8e8ea0' }
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 5, fontSize: 11, fontWeight: 500, fontFamily: 'var(--mono)', background: cfg.bg, color: cfg.color }}>
+      <span className="inline-flex items-center py-[2px] px-[8px] rounded-[5px] text-[11px] font-medium [font-family:var(--mono)]" style={{ background: cfg.bg, color: cfg.color }}>
       {status}
     </span>
   )
 }
 
-function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+function Card({ children, className = '', style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
   return (
-    <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, ...style }}>
-      {children}
-    </div>
+      <div className={`bg-[var(--card)] border border-[var(--border)] rounded-[12px] p-[16px] md:p-[20px] ${className}`} style={style}>
+        {children}
+      </div>
   )
 }
 
@@ -44,8 +43,6 @@ function timeAgo(d: string) {
   return `${Math.floor(h / 24)}d ago`
 }
 
-// ── Realtime dashboard ────────────────────────────────────────
-
 type Stats = {
   totalClients: number; totalArticles: number; totalKeywords: number
   statusCounts: Record<string, number>
@@ -58,27 +55,27 @@ export default function DashboardClient({ initialStats }: { initialStats: Stats 
   const [pulse, setPulse] = useState(false)
 
   const sb = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
   const refresh = useCallback(async () => {
     const [clients, articlesRes, keywords, logs] = await Promise.all([
       sb.from('clients').select('id', { count: 'exact', head: true }),
       sb.from('articles')
-        .select('id, status, keyword, meta_title, updated_at, clients(name, domain)', { count: 'exact' })
-        .order('updated_at', { ascending: false }).limit(8),
+          .select('id, status, keyword, meta_title, updated_at, clients(name, domain)', { count: 'exact' })
+          .order('updated_at', { ascending: false }).limit(8),
       sb.from('keywords').select('id', { count: 'exact', head: true }),
       sb.from('agent_logs')
-        .select('id, agent_name, action, status, created_at')
-        .order('created_at', { ascending: false }).limit(10),
+          .select('id, agent_name, action, status, created_at')
+          .order('created_at', { ascending: false }).limit(10),
     ])
 
     const statusCounts = { published: 0, approved: 0, written: 0, processing: 0, scouted: 0, failed: 0 }
-      ; (articlesRes.data || []).forEach((a: any) => {
-        const s = a.status as keyof typeof statusCounts
-        if (s in statusCounts) statusCounts[s]++
-      })
+    ; (articlesRes.data || []).forEach((a: any) => {
+      const s = a.status as keyof typeof statusCounts
+      if (s in statusCounts) statusCounts[s]++
+    })
 
     setStats({
       totalClients: clients.count || 0,
@@ -94,15 +91,15 @@ export default function DashboardClient({ initialStats }: { initialStats: Stats 
 
   useEffect(() => {
     const channel = sb
-      .channel('dashboard-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => {
-        setLiveCount(c => c + 1); refresh()
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'keywords' }, () => refresh())
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'clients' }, () => {
-        setLiveCount(c => c + 1); refresh()
-      })
-      .subscribe()
+        .channel('dashboard-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => {
+          setLiveCount(c => c + 1); refresh()
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'keywords' }, () => refresh())
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'clients' }, () => {
+          setLiveCount(c => c + 1); refresh()
+        })
+        .subscribe()
 
     return () => { sb.removeChannel(channel) }
   }, [sb, refresh])
@@ -125,132 +122,123 @@ export default function DashboardClient({ initialStats }: { initialStats: Stats 
   ]
 
   return (
-    <>
-      {/* ✅ FIXED: dangerouslySetInnerHTML prevents escaping quotes in CSS */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        :root{--bg:#212121;--sb:#171717;--card:#2f2f2f;--border:#3f3f3f;--border2:#2a2a2a;--t1:#ececec;--t2:#8e8ea0;--t3:#6b6b7b;--acc:#10a37f;--acc-l:#0d2e26;--mono:'DM Mono',monospace}
-        @keyframes kpiFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(16,163,127,.5)}70%{box-shadow:0 0 0 8px rgba(16,163,127,0)}100%{box-shadow:0 0 0 0 rgba(16,163,127,0)}}
-        .kpi{animation:kpiFade .4s ease both}
-        .live.pulse{animation:livePulse .7s ease}
-      ` }} />
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-        <div>
-          <h2 style={{ fontSize: 20, fontWeight: 600, color: 'var(--t1)', letterSpacing: '-0.02em', marginBottom: 4 }}>Dashboard</h2>
-          <p style={{ fontSize: 13, color: 'var(--t2)' }}>Real-time overview of your content pipeline</p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: '#0d2e26', border: '1px solid #155e4a', borderRadius: 8 }}>
-          <div className={`live${pulse ? ' pulse' : ''}`} style={{ width: 7, height: 7, borderRadius: '50%', background: '#10a37f' }} />
-          <span style={{ fontSize: 12, color: '#10a37f', fontFamily: 'var(--mono)', fontWeight: 500 }}>Live</span>
-          {liveCount > 0 && (
-            <span style={{ fontSize: 10, background: '#10a37f', color: '#fff', borderRadius: 4, padding: '1px 5px', fontFamily: 'var(--mono)' }}>
+      <>
+        {/* Uses flex-wrap so the header naturally stacks on mobile without needing Tailwind breakpoints */}
+        <div className="flex flex-wrap items-center justify-between gap-[12px] mb-[20px]">
+          <div>
+            <h2 className="text-[20px] font-semibold text-[var(--t1)] tracking-[-0.02em] mb-[4px]">Dashboard</h2>
+            <p className="text-[13px] text-[var(--t2)]">Real-time overview of your content pipeline</p>
+          </div>
+          <div className="flex items-center gap-[8px] py-[6px] px-[14px] bg-[#0d2e26] border border-[#155e4a] rounded-[8px]">
+            <div className={`w-[7px] h-[7px] rounded-full bg-[#10a37f] ${pulse ? 'animate-live-pulse' : ''}`} />
+            <span className="text-[12px] text-[#10a37f] [font-family:var(--mono)] font-medium">Live</span>
+            {liveCount > 0 && (
+                <span className="text-[10px] bg-[#10a37f] text-white rounded-[4px] py-[1px] px-[5px] [font-family:var(--mono)]">
               +{liveCount}
             </span>
-          )}
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 20 }}>
-        {KPI.map((k, i) => (
-          <Card key={k.label} style={{ animationDelay: `${i * 0.07}s` } as any}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-              <span style={{ fontSize: 11, color: 'var(--t2)', fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{k.label}</span>
-              <div style={{ width: 28, height: 28, borderRadius: 7, background: k.bg, color: k.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}>{k.icon}</div>
-            </div>
-            <div style={{ fontSize: 30, fontWeight: 600, color: 'var(--t1)', letterSpacing: '-0.04em', lineHeight: 1 }}>
-              {k.num.toLocaleString()}
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      <Card style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>Article Pipeline Status</h3>
-          <span style={{ fontSize: 11, color: 'var(--t3)', fontFamily: 'var(--mono)' }}>Updates live</span>
-        </div>
-        {STATUS_BAR.map(s => {
-          const pct = totalArticles > 0 ? Math.round((s.count / totalArticles) * 100) : 0
-          return (
-            <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-              <div style={{ width: 80, fontSize: 12, color: 'var(--t2)', flexShrink: 0 }}>{s.label}</div>
-              <div style={{ flex: 1, height: 6, background: '#2a2a2a', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${pct}%`, background: s.color, borderRadius: 3, transition: 'width .5s ease' }} />
-              </div>
-              <div style={{ width: 60, textAlign: 'right', fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--t3)', flexShrink: 0 }}>
-                {s.count} ({pct}%)
-              </div>
-            </div>
-          )
-        })}
-      </Card>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
-        <Card>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>Recent Articles</h3>
-            <a href="/articles" style={{ fontSize: 11, color: '#10a37f', fontFamily: 'var(--mono)', textDecoration: 'none' }}>View all →</a>
+            )}
           </div>
-          {recentArticles.length === 0 ? (
-            <p style={{ fontSize: 13, color: 'var(--t3)', textAlign: 'center', padding: '24px 0' }}>No articles yet</p>
-          ) : recentArticles.map((a: any) => {
-            const clientData = Array.isArray(a.clients) ? a.clients[0] : a.clients
+        </div>
+
+        {/* NATIVE RESPONSIVE GRID: Bypasses Tailwind classes. Automatically shows 4 columns on desktop and 1-2 on mobile */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }} className="mb-[20px]">
+          {KPI.map((k, i) => (
+              <Card key={k.label} className="animate-kpi-fade" style={{ animationDelay: `${i * 0.07}s` }}>
+                <div className="flex items-center justify-between mb-[10px]">
+                  <span className="text-[11px] text-[var(--t2)] [font-family:var(--mono)] uppercase tracking-[0.06em]">{k.label}</span>
+                  <div className="w-[28px] h-[28px] rounded-[7px] flex items-center justify-center text-[13px]" style={{ background: k.bg, color: k.color }}>{k.icon}</div>
+                </div>
+                <div className="text-[30px] font-semibold text-[var(--t1)] tracking-[-0.04em] leading-none">
+                  {k.num.toLocaleString()}
+                </div>
+              </Card>
+          ))}
+        </div>
+
+        <Card className="mb-[20px]">
+          <div className="flex items-center justify-between mb-[14px]">
+            <h3 className="text-[13px] font-semibold text-[var(--t1)]">Article Pipeline Status</h3>
+            <span className="text-[11px] text-[var(--t3)] [font-family:var(--mono)]">Updates live</span>
+          </div>
+          {STATUS_BAR.map(s => {
+            const pct = totalArticles > 0 ? Math.round((s.count / totalArticles) * 100) : 0
             return (
-              <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border2)' }}>
-                <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#10a37f', flexShrink: 0 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, color: 'var(--t1)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {a.meta_title || a.keyword}
+                <div key={s.label} className="flex items-center gap-[12px] mb-[10px]">
+                  <div className="w-[80px] text-[12px] text-[var(--t2)] shrink-0">{s.label}</div>
+                  <div className="flex-1 h-[6px] bg-[#2a2a2a] rounded-[3px] overflow-hidden">
+                    <div className="h-full rounded-[3px] transition-[width] duration-500 ease-in-out" style={{ width: `${pct}%`, background: s.color }} />
                   </div>
-                  {/* ✅ FIXED: suppressHydrationWarning for dynamic time string */}
-                  <div suppressHydrationWarning style={{ fontSize: 11, color: 'var(--t3)', fontFamily: 'var(--mono)' }}>
-                    {clientData?.domain || '—'} · {timeAgo(a.updated_at)}
+                  <div className="w-[60px] text-right text-[11px] [font-family:var(--mono)] text-[var(--t3)] shrink-0">
+                    {s.count} ({pct}%)
                   </div>
                 </div>
-                <Badge status={a.status} />
-              </div>
             )
           })}
         </Card>
 
-        <Card>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>Agent Activity</h3>
-            <span style={{ fontSize: 11, color: 'var(--t3)', fontFamily: 'var(--mono)' }}>Real-time</span>
-          </div>
-          {recentLogs.length === 0 ? (
-            <p style={{ fontSize: 13, color: 'var(--t3)', textAlign: 'center', padding: '24px 0' }}>No activity yet</p>
-          ) : recentLogs.map((log: any) => (
-            <div key={log.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: '1px solid var(--border2)' }}>
-              <div style={{ width: 7, height: 7, borderRadius: '50%', background: log.status === 'error' ? '#f87171' : '#10a37f', flexShrink: 0 }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, color: 'var(--t1)', fontWeight: 500 }}>{log.agent_name}</div>
-                <div style={{ fontSize: 11, color: 'var(--t3)', fontFamily: 'var(--mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{log.action}</div>
-              </div>
-              {/* ✅ FIXED: suppressHydrationWarning for dynamic time string */}
-              <span suppressHydrationWarning style={{ fontSize: 10, color: 'var(--t3)', fontFamily: 'var(--mono)', flexShrink: 0 }}>{timeAgo(log.created_at)}</span>
+        {/* NATIVE RESPONSIVE GRID: Automatically shows 2 columns on desktop and 1 on mobile */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }} className="mb-[20px]">
+          <Card>
+            <div className="flex items-center justify-between mb-[14px]">
+              <h3 className="text-[13px] font-semibold text-[var(--t1)]">Recent Articles</h3>
+              <a href="/articles" className="text-[11px] text-[#10a37f] [font-family:var(--mono)] no-underline">View all →</a>
             </div>
-          ))}
-        </Card>
-      </div>
+            {recentArticles.length === 0 ? (
+                <p className="text-[13px] text-[var(--t3)] text-center py-[24px]">No articles yet</p>
+            ) : recentArticles.map((a: any) => {
+              const clientData = Array.isArray(a.clients) ? a.clients[0] : a.clients
+              return (
+                  <div key={a.id} className="flex items-center gap-[10px] py-[8px] border-b border-[var(--border2)]">
+                    <div className="w-[7px] h-[7px] rounded-full bg-[#10a37f] shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13px] text-[var(--t1)] font-medium truncate">
+                        {a.meta_title || a.keyword}
+                      </div>
+                      <div suppressHydrationWarning className="text-[11px] text-[var(--t3)] [font-family:var(--mono)]">
+                        {clientData?.domain || '—'} · {timeAgo(a.updated_at)}
+                      </div>
+                    </div>
+                    <Badge status={a.status} />
+                  </div>
+              )
+            })}
+          </Card>
 
-      <Card>
-        <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)', marginBottom: 12 }}>Quick Actions</h3>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {[
-            { label: '+ New Client', href: '/onboarding' },
-            { label: '◈ Articles', href: '/articles' },
-            { label: '◇ Keywords', href: '/keywords' },
-            { label: '⚙ Settings', href: '/settings' },
-          ].map(a => (
-            <a key={a.label} href={a.href} style={{ padding: '9px 16px', borderRadius: 8, border: '1px solid var(--border)', background: '#2a2a2a', color: 'var(--t2)', fontSize: 12, fontWeight: 500, textDecoration: 'none', transition: 'all .15s' }}>
-              {a.label}
-            </a>
-          ))}
+          <Card>
+            <div className="flex items-center justify-between mb-[14px]">
+              <h3 className="text-[13px] font-semibold text-[var(--t1)]">Agent Activity</h3>
+              <span className="text-[11px] text-[var(--t3)] [font-family:var(--mono)]">Real-time</span>
+            </div>
+            {recentLogs.length === 0 ? (
+                <p className="text-[13px] text-[var(--t3)] text-center py-[24px]">No activity yet</p>
+            ) : recentLogs.map((log: any) => (
+                <div key={log.id} className="flex items-center gap-[10px] py-[7px] border-b border-[var(--border2)]">
+                  <div className="w-[7px] h-[7px] rounded-full shrink-0" style={{ background: log.status === 'error' ? '#f87171' : '#10a37f' }} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[12px] text-[var(--t1)] font-medium">{log.agent_name}</div>
+                    <div className="text-[11px] text-[var(--t3)] [font-family:var(--mono)] truncate">{log.action}</div>
+                  </div>
+                  <span suppressHydrationWarning className="text-[10px] text-[var(--t3)] [font-family:var(--mono)] shrink-0">{timeAgo(log.created_at)}</span>
+                </div>
+            ))}
+          </Card>
         </div>
-      </Card>
-    </>
+
+        <Card>
+          <h3 className="text-[13px] font-semibold text-[var(--t1)] mb-[12px]">Quick Actions</h3>
+          <div className="flex gap-[8px] flex-wrap">
+            {[
+              { label: '+ New Client', href: '/onboarding' },
+              { label: '◈ Articles', href: '/articles' },
+              { label: '◇ Keywords', href: '/keywords' },
+              { label: '⚙ Settings', href: '/settings' },
+            ].map(a => (
+                <a key={a.label} href={a.href} className="py-[9px] px-[16px] rounded-[8px] border border-[var(--border)] bg-[#2a2a2a] text-[var(--t2)] text-[12px] font-medium no-underline transition-all duration-[150ms] hover:text-[var(--t1)]">
+                  {a.label}
+                </a>
+            ))}
+          </div>
+        </Card>
+      </>
   )
 }
