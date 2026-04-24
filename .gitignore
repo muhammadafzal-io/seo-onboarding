@@ -52,4 +52,4 @@ dist/
 # Optional lock files if you want to avoid conflicts
 # package-lock.json
 # yarn.lock
-# pnpm-lock.yaml
+# pnpm-lock.yamlpackage-lock.json
