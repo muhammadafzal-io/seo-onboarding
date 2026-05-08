@@ -44,6 +44,24 @@ function Badge({ status }: { status: string }) {
   )
 }
 
+function parseKeywordList(raw: any): string[] {
+  try {
+    if (!raw) return []
+    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
+    if (!Array.isArray(parsed)) return []
+
+    return parsed
+      .map((item: any) => {
+        if (typeof item === 'string') return item
+        if (item && typeof item.keyword === 'string') return item.keyword
+        return ''
+      })
+      .filter(Boolean)
+  } catch {
+    return []
+  }
+}
+
 function StatCard({ label, value, color }: { label: string; value: string | number; color?: string }) {
   return (
     <div style={{ background: '#262626', border: '1px solid #3f3f3f', borderRadius: 10, padding: '14px 16px' }}>
@@ -142,6 +160,113 @@ export default function ClientProfileClient({ data }: { data: ProfileData }) {
 
   const reviewableCount = recentArticles.filter((a: any) => REVIEWABLE_STATUSES.includes(a.status)).length
 
+  const [keywordsOpen, setKeywordsOpen] = useState(false)
+  const [keywordsLoading, setKeywordsLoading] = useState(false)
+  const [keywordsError, setKeywordsError] = useState<string | null>(null)
+  const [clientKeywords, setClientKeywords] = useState<any[] | null>(null)
+  const [expandedKeywordRows, setExpandedKeywordRows] = useState<Set<number>>(new Set())
+  const [newArticleOpen, setNewArticleOpen] = useState(false)
+  const [newArticleSubmitting, setNewArticleSubmitting] = useState(false)
+  const [newArticleLoadingDefaults, setNewArticleLoadingDefaults] = useState(false)
+  const [newArticleError, setNewArticleError] = useState<string | null>(null)
+  const [newArticleSuccess, setNewArticleSuccess] = useState<string | null>(null)
+  const [newArticleForm, setNewArticleForm] = useState({
+    websiteUrls: [] as string[],
+    keywords: [] as string[],
+    contextRaw: '',
+  })
+
+  const openKeywords = async () => {
+    setKeywordsOpen(true)
+    if (clientKeywords !== null || keywordsLoading) return
+
+    try {
+      setKeywordsLoading(true)
+      setKeywordsError(null)
+      const res = await fetch(`/api/clients/${client.id}/keywords`)
+      if (!res.ok) {
+        throw new Error('Failed to load client keywords')
+      }
+      const body = await res.json()
+      setClientKeywords(body.keywords || [])
+    } catch (e: any) {
+      setKeywordsError(e.message || 'Failed to load client keywords')
+    } finally {
+      setKeywordsLoading(false)
+    }
+  }
+
+  const toggleKeywordRowExpansion = (keywordId: number) => {
+    setExpandedKeywordRows(prev => {
+      const next = new Set(prev)
+      if (next.has(keywordId)) {
+        next.delete(keywordId)
+      } else {
+        next.add(keywordId)
+      }
+      return next
+    })
+  }
+
+  const openGenerateArticleModal = async () => {
+    setNewArticleOpen(true)
+    setNewArticleError(null)
+    setNewArticleSuccess(null)
+    setNewArticleLoadingDefaults(true)
+
+    try {
+      const res = await fetch(`/api/clients/${client.id}/generate-article`)
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error || 'Failed to fetch onboarding data')
+
+      setNewArticleForm({
+        websiteUrls: body.website_urls || [],
+        keywords: body.keywords || [],
+        contextRaw: JSON.stringify(body.client_context || {}, null, 2),
+      })
+    } catch (e: any) {
+      setNewArticleError(e.message || 'Failed to fetch onboarding data')
+    } finally {
+      setNewArticleLoadingDefaults(false)
+    }
+  }
+
+  const submitGeneratedArticle = async () => {
+    setNewArticleSubmitting(true)
+    setNewArticleError(null)
+    setNewArticleSuccess(null)
+
+    try {
+      let parsedContext: any = null
+      try {
+        parsedContext = newArticleForm.contextRaw.trim() ? JSON.parse(newArticleForm.contextRaw) : null
+      } catch {
+        throw new Error('Client context must be valid JSON')
+      }
+
+      const res = await fetch(`/api/clients/${client.id}/generate-article`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          website_urls: newArticleForm.websiteUrls,
+          keywords: newArticleForm.keywords,
+          client_context: parsedContext,
+        }),
+      })
+
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error || 'Failed to trigger article generation')
+
+      setNewArticleSuccess('Article generator webhook triggered successfully.')
+      handleRefresh()
+      setNewArticleOpen(false)
+    } catch (e: any) {
+      setNewArticleError(e.message || 'Failed to trigger article generation')
+    } finally {
+      setNewArticleSubmitting(false)
+    }
+  }
+
   return (
     <Layout title="Client Profile">
       <Card>
@@ -192,9 +317,32 @@ export default function ClientProfileClient({ data }: { data: ProfileData }) {
               <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                 <a href={`/articles?clientId=${client.id}`} style={{ padding: '7px 14px', background: '#2a2a2a', border: '1px solid #3f3f3f', borderRadius: 7, color: '#8e8ea0', fontSize: 12, textDecoration: 'none', fontWeight: 500 }}>Articles</a>
                 <a href={`/keywords?clientId=${client.id}`} style={{ padding: '7px 14px', background: '#2a2a2a', border: '1px solid #3f3f3f', borderRadius: 7, color: '#8e8ea0', fontSize: 12, textDecoration: 'none', fontWeight: 500 }}>Keywords</a>
+                <button
+                  onClick={openGenerateArticleModal}
+                  disabled={newArticleSubmitting}
+                  style={{ padding: '7px 14px', background: '#0f1e2e', border: '1px solid #1f3a58', borderRadius: 7, color: '#60a5fa', fontSize: 12, fontWeight: 600, cursor: newArticleSubmitting ? 'wait' : 'pointer', opacity: newArticleSubmitting ? 0.8 : 1 }}
+                >
+                  {newArticleSubmitting ? 'Generating...' : 'Generate New Article'}
+                </button>
+                <button
+                  onClick={openKeywords}
+                  style={{ padding: '7px 14px', background: '#10a37f', border: 'none', borderRadius: 7, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  Client Keywords
+                </button>
                 <a href={`/create-article?clientId=${client.id}`} style={{ padding: '7px 14px', background: '#10a37f', border: 'none', borderRadius: 7, color: '#fff', fontSize: 12, textDecoration: 'none', fontWeight: 600 }}>+ Article</a>
               </div>
             </div>
+            {newArticleError && (
+              <div style={{ marginTop: -6, marginBottom: 12, padding: '9px 12px', background: '#2a1515', border: '1px solid #5a2020', borderRadius: 8, color: '#f87171', fontSize: 12, fontFamily: 'monospace' }}>
+                ⚠ {newArticleError}
+              </div>
+            )}
+            {newArticleSuccess && (
+              <div style={{ marginTop: -6, marginBottom: 12, padding: '9px 12px', background: '#0d2e26', border: '1px solid #1d5b4c', borderRadius: 8, color: '#10a37f', fontSize: 12, fontFamily: 'monospace' }}>
+                ✓ {newArticleSuccess}
+              </div>
+            )}
 
             {/* KPI stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 16 }}>
@@ -387,6 +535,257 @@ export default function ClientProfileClient({ data }: { data: ProfileData }) {
             </div>
           </div>
         </div>
+
+        {keywordsOpen && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.75)',
+              zIndex: 900,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 24,
+            }}
+            onClick={e => { if (e.target === e.currentTarget) setKeywordsOpen(false) }}
+          >
+            <div
+              style={{
+                background: '#2f2f2f',
+                border: '1px solid #3f3f3f',
+                borderRadius: 14,
+                width: '100%',
+                maxWidth: 900,
+                maxHeight: '90vh',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  padding: '16px 20px',
+                  borderBottom: '1px solid #3f3f3f',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 11, color: '#6b6b7b', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
+                    Client Keywords
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: '#ececec' }}>
+                    {client.name || client.domain}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setKeywordsOpen(false)}
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid #3f3f3f',
+                    borderRadius: 7,
+                    color: '#8e8ea0',
+                    fontSize: 13,
+                    padding: '6px 12px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+
+              <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
+                {keywordsLoading ? (
+                  <div style={{ padding: '40px 0', textAlign: 'center', color: '#6b6b7b', fontSize: 13 }}>
+                    Loading keywords...
+                  </div>
+                ) : keywordsError ? (
+                  <div style={{ padding: '24px 0', textAlign: 'center', color: '#f87171', fontSize: 13 }}>
+                    {keywordsError}
+                  </div>
+                ) : !clientKeywords || clientKeywords.length === 0 ? (
+                  <div style={{ padding: '40px 0', textAlign: 'center', color: '#6b6b7b', fontSize: 13 }}>
+                    No keywords found for this client.
+                  </div>
+                ) : (
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid #3f3f3f' }}>
+                        <th style={{ ...s.th, paddingLeft: 0 }}>Keyword</th>
+                        <th style={s.th}>Status</th>
+                        <th style={s.th}>Primary</th>
+                        <th style={{ ...s.th, textAlign: 'right' }}>Search Volume</th>
+                        <th style={s.th}>Related Keywords (Tool)</th>
+                        <th style={s.th}>Selected Related Keywords</th>
+                        <th style={s.th}>All Selected Keywords</th>
+                        <th style={s.th}>Created</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {clientKeywords.map((kw: any) => {
+                        const relatedKeywords = parseKeywordList(kw.related_keywords)
+                        const selectedRelatedKeywords = parseKeywordList(kw.selected_related_keywords)
+                        const allSelectedKeywords = parseKeywordList(kw.all_selected_keywords)
+                        const isExpanded = expandedKeywordRows.has(kw.id)
+                        const relatedPreview = isExpanded ? relatedKeywords : relatedKeywords.slice(0, 6)
+                        const selectedPreview = isExpanded ? selectedRelatedKeywords : selectedRelatedKeywords.slice(0, 6)
+                        const allSelectedPreview = isExpanded ? allSelectedKeywords : allSelectedKeywords.slice(0, 6)
+
+                        return (
+                          <tr key={kw.id}>
+                            <td style={{ ...s.td, paddingLeft: 0, maxWidth: 220 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: kw.is_primary ? '#10a37f' : '#ececec', fontWeight: kw.is_primary ? 600 : 400 }}>
+                                  {kw.keyword}
+                                </span>
+                                {(relatedKeywords.length > 6 || selectedRelatedKeywords.length > 6 || allSelectedKeywords.length > 6) && (
+                                  <button
+                                    onClick={() => toggleKeywordRowExpansion(kw.id)}
+                                    style={{ padding: '2px 8px', borderRadius: 999, border: '1px solid #3f3f3f', background: '#262626', color: '#8e8ea0', fontSize: 10, cursor: 'pointer', fontFamily: 'monospace', whiteSpace: 'nowrap' }}
+                                  >
+                                    {isExpanded ? 'Show less' : 'Show all'}
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                            <td style={s.td}>
+                              <Badge status={kw.status} />
+                            </td>
+                            <td style={{ ...s.td, fontFamily: 'monospace', fontSize: 12 }}>
+                              {kw.is_primary ? 'Yes' : 'No'}
+                            </td>
+                            <td style={{ ...s.td, textAlign: 'right', fontFamily: 'monospace', fontSize: 12 }}>
+                              {kw.search_volumes ? kw.search_volumes.toLocaleString() : '—'}
+                            </td>
+                            <td style={{ ...s.td, maxWidth: 260 }}>
+                              {relatedKeywords.length > 0 ? (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                  {relatedPreview.map((item: string) => (
+                                    <span key={item} style={{ fontSize: 11, color: '#60a5fa', background: '#0f1e2e', border: '1px solid #2a3f58', borderRadius: 999, padding: '2px 8px' }}>
+                                      {item}
+                                    </span>
+                                  ))}
+                                  {!isExpanded && relatedKeywords.length > 6 && (
+                                    <span style={{ fontSize: 11, color: '#8e8ea0' }}>+{relatedKeywords.length - 6} more</span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span style={{ color: '#6b6b7b', fontSize: 12 }}>—</span>
+                              )}
+                            </td>
+                            <td style={{ ...s.td, maxWidth: 260 }}>
+                              {selectedRelatedKeywords.length > 0 ? (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                  {selectedPreview.map((item: string) => (
+                                    <span key={item} style={{ fontSize: 11, color: '#10a37f', background: '#0d2e26', border: '1px solid #1d5b4c', borderRadius: 999, padding: '2px 8px' }}>
+                                      {item}
+                                    </span>
+                                  ))}
+                                  {!isExpanded && selectedRelatedKeywords.length > 6 && (
+                                    <span style={{ fontSize: 11, color: '#8e8ea0' }}>+{selectedRelatedKeywords.length - 6} more</span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span style={{ color: '#6b6b7b', fontSize: 12 }}>—</span>
+                              )}
+                            </td>
+                            <td style={{ ...s.td, maxWidth: 260 }}>
+                              {allSelectedKeywords.length > 0 ? (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                  {allSelectedPreview.map((item: string) => (
+                                    <span key={item} style={{ fontSize: 11, color: '#f59e0b', background: '#2a1f0a', border: '1px solid #5a4219', borderRadius: 999, padding: '2px 8px' }}>
+                                      {item}
+                                    </span>
+                                  ))}
+                                  {!isExpanded && allSelectedKeywords.length > 6 && (
+                                    <span style={{ fontSize: 11, color: '#8e8ea0' }}>+{allSelectedKeywords.length - 6} more</span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span style={{ color: '#6b6b7b', fontSize: 12 }}>—</span>
+                              )}
+                            </td>
+                            <td style={{ ...s.td, fontFamily: 'monospace', fontSize: 12 }}>
+                              {kw.created_at ? new Date(kw.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {newArticleOpen && (
+          <div
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 980, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+            onClick={e => { if (e.target === e.currentTarget) setNewArticleOpen(false) }}
+          >
+            <div style={{ background: '#2f2f2f', border: '1px solid #3f3f3f', borderRadius: 14, width: '100%', maxWidth: 900, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid #3f3f3f', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: 11, color: '#6b6b7b', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
+                    Generate New Article
+                  </div>
+                  <div style={{ fontSize: 15, color: '#ececec', fontWeight: 600 }}>
+                    Onboarding data autofilled for {client.name || client.domain}
+                  </div>
+                </div>
+                <button onClick={() => setNewArticleOpen(false)} style={{ padding: '6px 12px', borderRadius: 7, border: '1px solid #3f3f3f', background: 'transparent', color: '#8e8ea0', cursor: 'pointer', fontSize: 13 }}>Close</button>
+              </div>
+
+              <div style={{ padding: 16, overflowY: 'auto' }}>
+                {newArticleLoadingDefaults ? (
+                  <div style={{ padding: '24px 0', textAlign: 'center', color: '#6b6b7b', fontSize: 13 }}>Loading onboarding data...</div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
+                    <div>
+                      <span style={s.fieldLabel}>Website URLs (autofilled)</span>
+                      <textarea
+                        value={newArticleForm.websiteUrls.join('\n')}
+                        onChange={e => setNewArticleForm(prev => ({ ...prev, websiteUrls: e.target.value.split('\n').map(v => v.trim()).filter(Boolean) }))}
+                        rows={4}
+                        style={{ width: '100%', background: '#262626', border: '1px solid #3a3a3a', borderRadius: 8, padding: '10px 12px', color: '#ececec', fontSize: 12, outline: 'none', resize: 'vertical', fontFamily: 'monospace', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                    <div>
+                      <span style={s.fieldLabel}>Keywords (autofilled)</span>
+                      <textarea
+                        value={newArticleForm.keywords.join('\n')}
+                        onChange={e => setNewArticleForm(prev => ({ ...prev, keywords: e.target.value.split('\n').map(v => v.trim()).filter(Boolean) }))}
+                        rows={5}
+                        style={{ width: '100%', background: '#262626', border: '1px solid #3a3a3a', borderRadius: 8, padding: '10px 12px', color: '#ececec', fontSize: 12, outline: 'none', resize: 'vertical', fontFamily: 'monospace', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                    <div>
+                      <span style={s.fieldLabel}>Client Context JSON (autofilled)</span>
+                      <textarea
+                        value={newArticleForm.contextRaw}
+                        onChange={e => setNewArticleForm(prev => ({ ...prev, contextRaw: e.target.value }))}
+                        rows={10}
+                        style={{ width: '100%', background: '#262626', border: '1px solid #3a3a3a', borderRadius: 8, padding: '10px 12px', color: '#ececec', fontSize: 12, outline: 'none', resize: 'vertical', fontFamily: 'monospace', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ padding: '14px 16px', borderTop: '1px solid #3a3a3a', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                <button onClick={() => setNewArticleOpen(false)} style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #3f3f3f', borderRadius: 7, color: '#8e8ea0', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+                <button onClick={submitGeneratedArticle} disabled={newArticleSubmitting || newArticleLoadingDefaults} style={{ padding: '8px 18px', background: newArticleSubmitting ? '#0a2420' : '#10a37f', border: 'none', borderRadius: 7, color: '#fff', fontSize: 13, fontWeight: 600, cursor: newArticleSubmitting ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
+                  {newArticleSubmitting ? 'Generating...' : 'Trigger Article Generator'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </Card>
     </Layout>
   )
