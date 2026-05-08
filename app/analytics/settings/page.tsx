@@ -5,15 +5,17 @@ import { ClientWithGa } from '../../../types/analytics';
 import Layout from '../../../components/Layout';
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <label style={{ display: 'block', fontSize: 11, color: '#6b6b7b', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>{children}</label>
+  return <label className="block text-[11px] text-[#6b6b7b] font-mono uppercase tracking-[0.07em] mb-[6px]">{children}</label>
 }
+
 function TextInput({ value, onChange, placeholder, mono }: { value: string; onChange: (v: string) => void; placeholder?: string; mono?: boolean }) {
   return (
-    <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-      style={{ width: '100%', background: '#262626', border: '1px solid #3a3a3a', borderRadius: 8, padding: '8px 12px', color: '#ececec', fontSize: mono ? 12 : 13, outline: 'none', fontFamily: mono ? 'monospace' : 'inherit', boxSizing: 'border-box' }}
-      onFocus={e => (e.currentTarget.style.borderColor = '#10a37f')}
-      onBlur={e => (e.currentTarget.style.borderColor = '#3a3a3a')}
-    />
+      <input
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={`w-full box-border bg-[#262626] border border-[#3a3a3a] rounded-[8px] py-[8px] px-[12px] text-[#ececec] outline-none transition-colors focus:border-[#10a37f] ${mono ? 'text-[12px] font-mono' : 'text-[13px] font-inherit'}`}
+      />
   )
 }
 
@@ -45,11 +47,11 @@ export default function GaSettingsPage() {
 
   useEffect(() => {
     fetch('/api/analytics/clients')
-      .then(r => r.json())
-      .then(data => {
-        setClients(data)
-        if (data.length > 0) selectClient(data[0])
-      })
+        .then(r => r.json())
+        .then(data => {
+          setClients(data)
+          if (data.length > 0) selectClient(data[0])
+        })
   }, [])
 
   const selectClient = (c: ClientWithGa) => {
@@ -97,155 +99,204 @@ export default function GaSettingsPage() {
     finally { setSaving(false) }
   }
 
-  const section: React.CSSProperties = { background: '#2f2f2f', border: '1px solid #3f3f3f', borderRadius: 12, padding: 20, marginBottom: 16 }
-
   return (
-    <Layout title="Analytics Settings">
-      {toast && (
-        <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 2000, background: '#0d2e26', border: '1px solid #10a37f', borderRadius: 8, padding: '10px 18px', color: '#10a37f', fontSize: 13, fontFamily: 'monospace' }}>
-          ✓ {toast}
-        </div>
-      )}
+      <Layout title="Analytics Settings">
+        {/* HYBRID CSS OVERRIDES FOR MOBILE/TABLET */}
+        <style>{`
+      
+        .responsive-page-wrapper { padding: 28px 28px 28px 248px; }
+        .responsive-main-grid { display: grid; grid-template-columns: 220px 1fr; gap: 16px; }
+        .responsive-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .responsive-col-span-2 { grid-column: span 2; }
+        .responsive-section { padding: 20px; }
+        
+        @media (max-width: 1024px) {
+         
+          .responsive-page-wrapper { padding: 24px !important; }
+        }
+        
+        @media (max-width: 768px) {
+          /* Mobile Overrides */
+          .responsive-page-wrapper { padding: 16px !important; }
+          .responsive-main-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+          .responsive-form-grid { grid-template-columns: 1fr !important; }
+          .responsive-col-span-2 { grid-column: span 1 !important; }
+          .responsive-client-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+          .responsive-error-badge { margin-left: 0 !important; width: 100% !important; margin-top: 8px !important; }
+          .responsive-actions { flex-direction: column !important; width: 100% !important; }
+          .responsive-actions > * { width: 100% !important; justify-content: center !important; }
+          .responsive-section { padding: 16px !important; }
+        }
+      `}</style>
 
-      <div style={{ minHeight: '100vh', background: '#212121', color: '#ececec', fontFamily: "'Instrument Sans', system-ui, sans-serif", padding: '28px 28px 28px 248px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+        {toast && (
+            <div className="fixed bottom-[24px] right-[24px] z-[2000] bg-[#0d2e26] border border-[#10a37f] rounded-[8px] py-[10px] px-[18px] text-[#10a37f] text-[13px] font-mono">
+              ✓ {toast}
+            </div>
+        )}
 
-          {/* Breadcrumb */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, fontSize: 12, color: '#6b6b7b' }}>
-            <a href="/analytics" style={{ color: '#6b6b7b', textDecoration: 'none' }}>Analytics</a>
-            <span>›</span>
-            <span style={{ color: '#ececec' }}>GA property settings</span>
-          </div>
+        <div className="min-h-[100vh] bg-[#212121] text-[#ececec] [font-family:'Instrument_Sans',system-ui,sans-serif] responsive-page-wrapper">
+          <div className="max-w-[900px] mx-auto min-w-0">
 
-          <div style={{ marginBottom: 24 }}>
-            <h1 style={{ fontSize: 20, fontWeight: 600, color: '#ececec', letterSpacing: '-0.02em', marginBottom: 4 }}>
-              Google Analytics properties
-            </h1>
-            <p style={{ fontSize: 13, color: '#6b6b7b' }}>
-              Configure a GA4 property for each client. Each client can have its own service account credentials.
-            </p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 16 }}>
-
-            <div style={{ ...section, padding: 12, alignSelf: 'start' }}>
-              <div style={{ fontSize: 10, color: '#6b6b7b', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '4px 8px', marginBottom: 6 }}>Clients</div>
-              {clients.map(c => {
-                const hasGa = !!c.ga_property?.is_active
-                const isActive = selected?.id === c.id
-                return (
-                  <button key={c.id} onClick={() => selectClient(c)}
-                    style={{ width: '100%', padding: '9px 10px', background: isActive ? '#0d2e26' : 'transparent', border: `1px solid ${isActive ? '#10a37f' : 'transparent'}`, borderRadius: 8, color: isActive ? '#10a37f' : '#8e8ea0', fontSize: 13, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name || c.domain}</span>
-                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: hasGa ? '#10a37f' : '#3a3a3a', flexShrink: 0, marginLeft: 6 }} />
-                  </button>
-                )
-              })}
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-[6px] mb-[20px] text-[12px] text-[#6b6b7b] flex-wrap">
+              <a href="/analytics" className="text-[#6b6b7b] no-underline hover:text-[#ececec] transition-colors">Analytics</a>
+              <span>›</span>
+              <span className="text-[#ececec]">GA property settings</span>
             </div>
 
-            {selected && (
-              <div>
-                <div style={{ ...section }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid #2a2a2a' }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 9, background: 'linear-gradient(135deg,#10a37f,#0d6e5a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-                      {(selected.name || 'C')[0].toUpperCase()}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 15, fontWeight: 600, color: '#ececec' }}>{selected.name}</div>
-                      <div style={{ fontSize: 12, color: '#4a4a4a', fontFamily: 'monospace' }}>{selected.domain}</div>
-                    </div>
-                    {selected.ga_property?.last_sync_error && (
-                      <div style={{ marginLeft: 'auto', padding: '4px 10px', background: '#2a1515', border: '1px solid #5a2020', borderRadius: 6, fontSize: 11, color: '#f87171', fontFamily: 'monospace' }}>
-                        ⚠ {selected.ga_property.last_sync_error.slice(0, 60)}…
-                      </div>
-                    )}
-                  </div>
+            <div className="mb-[24px]">
+              <h1 className="text-[20px] font-semibold text-[#ececec] tracking-[-0.02em] mb-[4px] m-0">
+                Google Analytics properties
+              </h1>
+              <p className="text-[13px] text-[#6b6b7b] m-0">
+                Configure a GA4 property for each client. Each client can have its own service account credentials.
+              </p>
+            </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <div style={{ gridColumn: 'span 2' }}>
-                      <FieldLabel>GA4 Property ID *</FieldLabel>
-                      <TextInput value={form.property_id} onChange={v => set('property_id', v)} placeholder="properties/123456789" mono />
-                      <p style={{ fontSize: 11, color: '#4a4a4a', marginTop: 4 }}>
-                        Find in GA4 → Admin → Property → Property details
-                      </p>
-                    </div>
-                    <div>
-                      <FieldLabel>Property name</FieldLabel>
-                      <TextInput value={form.property_name} onChange={v => set('property_name', v)} placeholder="Acme Corp — GA4" />
-                    </div>
-                    <div>
-                      <FieldLabel>Service account email</FieldLabel>
-                      <TextInput value={form.service_account_email} onChange={v => set('service_account_email', v)} placeholder="name@project.iam.gserviceaccount.com" mono />
-                    </div>
-                    <div>
-                      <FieldLabel>Timezone</FieldLabel>
-                      <TextInput value={form.timezone} onChange={v => set('timezone', v)} placeholder="America/New_York" mono />
-                    </div>
-                    <div>
-                      <FieldLabel>Currency</FieldLabel>
-                      <TextInput value={form.currency} onChange={v => set('currency', v)} placeholder="USD" mono />
-                    </div>
-                    <div style={{ gridColumn: 'span 2' }}>
-                      <FieldLabel>
-                        Service account credentials JSON
-                        {form.credentials_json && ' (new value — leave blank to keep existing)'}
-                      </FieldLabel>
-                      <textarea
-                        value={form.credentials_json}
-                        onChange={e => set('credentials_json', e.target.value)}
-                        rows={6}
-                        placeholder={'{\n  "type": "service_account",\n  "client_email": "...",\n  "private_key": "..."\n}'}
-                        style={{ width: '100%', background: '#1a1a1a', border: '1px solid #3a3a3a', borderRadius: 8, padding: '10px 12px', color: '#d1d1d1', fontSize: 11, outline: 'none', fontFamily: 'monospace', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }}
-                        onFocus={e => (e.currentTarget.style.borderColor = '#10a37f')}
-                        onBlur={e => (e.currentTarget.style.borderColor = '#3a3a3a')}
-                      />
-                      <p style={{ fontSize: 11, color: '#4a4a4a', marginTop: 4, lineHeight: 1.5 }}>
-                        Grant <strong>Viewer</strong> access to the service account email in GA4 → Admin → Property access management.
-                        In production, use Supabase Vault instead of storing JSON directly.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+            {/* MAIN GRID */}
+            <div className="responsive-main-grid min-w-0">
 
-
-                <div style={{ ...section, padding: 16 }}>
-                  <div style={{ fontSize: 12, fontWeight: 500, color: '#ececec', marginBottom: 12 }}>Setup checklist</div>
-                  {[
-                    ['1', 'Create a service account', 'Google Cloud Console → IAM → Service Accounts → Create'],
-                    ['2', 'Download JSON key', 'Service Accounts → Keys → Add Key → JSON'],
-                    ['3', 'Grant GA4 access', 'GA4 Admin → Property access management → Add users → Viewer role'],
-                    ['4', 'Find property ID', 'GA4 Admin → Property → Property details → Property ID'],
-                    ['5', 'Paste credentials above', 'Paste the full service account JSON into the field above'],
-                  ].map(([num, title, desc]) => (
-                    <div key={num} style={{ display: 'flex', gap: 10, marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid #2a2a2a' }}>
-                      <span style={{ fontSize: 10, fontFamily: 'monospace', color: '#10a37f', background: '#0d2e26', width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{num}</span>
-                      <div>
-                        <div style={{ fontSize: 13, color: '#d1d1d1', fontWeight: 500 }}>{title}</div>
-                        <div style={{ fontSize: 11, color: '#4a4a4a', marginTop: 2 }}>{desc}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {error && <div style={{ padding: '10px 14px', background: '#2a1515', border: '1px solid #5a2020', borderRadius: 8, color: '#f87171', fontSize: 13, fontFamily: 'monospace', marginBottom: 12 }}>⚠ {error}</div>}
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                  <a href="/analytics" style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #3a3a3a', borderRadius: 7, color: '#8e8ea0', fontSize: 13, textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-                    ← Back to dashboard
-                  </a>
-                  <button onClick={handleSave} disabled={saving}
-                    style={{ padding: '8px 22px', background: saving ? '#0a2420' : '#10a37f', border: 'none', borderRadius: 7, color: '#fff', fontSize: 13, fontWeight: 600, cursor: saving ? 'wait' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {saving ? (
-                      <><div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', animation: 'spin .7s linear infinite' }} />Saving…</>
-                    ) : '✓ Save GA property'}
-                  </button>
-                </div>
+              {/* Left Sidebar: Clients List */}
+              <div className="bg-[#2f2f2f] border border-[#3f3f3f] rounded-[12px] p-[12px] mb-[16px] self-start min-w-0 w-full">
+                <div className="text-[10px] text-[#6b6b7b] font-mono uppercase tracking-[0.08em] py-[4px] px-[8px] mb-[6px]">Clients</div>
+                {clients.map(c => {
+                  const hasGa = !!c.ga_property?.is_active
+                  const isActive = selected?.id === c.id
+                  return (
+                      <button
+                          key={c.id}
+                          onClick={() => selectClient(c)}
+                          className={`w-full py-[9px] px-[10px] rounded-[8px] text-[13px] cursor-pointer text-left font-inherit flex items-center justify-between mb-[2px] transition-colors ${
+                              isActive ? 'bg-[#0d2e26] border-[#10a37f] text-[#10a37f]' : 'bg-transparent border-transparent text-[#8e8ea0] hover:bg-[#3a3a3a]'
+                          } border`}
+                      >
+                        {/* flex-1 ensures it pushes the dot to the right while allowing truncation */}
+                        <span className="overflow-hidden text-ellipsis whitespace-nowrap min-w-0 flex-1">{c.name || c.domain}</span>
+                        <span className={`w-[7px] h-[7px] rounded-full shrink-0 ml-[6px] ${hasGa ? 'bg-[#10a37f]' : 'bg-[#3a3a3a]'}`} />
+                      </button>
+                  )
+                })}
               </div>
-            )}
+
+              {/* Right Panel: Form */}
+              {selected && (
+                  <div className="min-w-0">
+                    <div className="bg-[#2f2f2f] border border-[#3f3f3f] rounded-[12px] mb-[16px] min-w-0 responsive-section">
+
+                      {/* Selected Client Header */}
+                      <div className="flex items-center gap-[10px] mb-[20px] pb-[14px] border-b border-[#2a2a2a] responsive-client-header min-w-0">
+                        <div className="flex items-center gap-[10px] min-w-0 w-full sm:w-auto">
+                          <div className="w-[36px] h-[36px] rounded-[9px] bg-[linear-gradient(135deg,#10a37f,#0d6e5a)] flex items-center justify-center text-[14px] font-bold text-white shrink-0">
+                            {(selected.name || 'C')[0].toUpperCase()}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[15px] font-semibold text-[#ececec] truncate">{selected.name}</div>
+                            <div className="text-[12px] text-[#4a4a4a] font-mono truncate">{selected.domain}</div>
+                          </div>
+                        </div>
+                        {selected.ga_property?.last_sync_error && (
+                            <div className="ml-auto py-[4px] px-[10px] bg-[#2a1515] border border-[#5a2020] rounded-[6px] text-[11px] text-[#f87171] font-mono break-words text-left responsive-error-badge">
+                              ⚠ {selected.ga_property.last_sync_error}
+                            </div>
+                        )}
+                      </div>
+
+                      {/* FORM GRID */}
+                      <div className="responsive-form-grid min-w-0">
+                        <div className="responsive-col-span-2 min-w-0">
+                          <FieldLabel>GA4 Property ID *</FieldLabel>
+                          <TextInput value={form.property_id} onChange={v => set('property_id', v)} placeholder="properties/123456789" mono />
+                          <p className="text-[11px] text-[#4a4a4a] mt-[4px] m-0">
+                            Find in GA4 → Admin → Property → Property details
+                          </p>
+                        </div>
+                        <div className="min-w-0">
+                          <FieldLabel>Property name</FieldLabel>
+                          <TextInput value={form.property_name} onChange={v => set('property_name', v)} placeholder="Acme Corp — GA4" />
+                        </div>
+                        <div className="min-w-0">
+                          <FieldLabel>Service account email</FieldLabel>
+                          <TextInput value={form.service_account_email} onChange={v => set('service_account_email', v)} placeholder="name@project.iam.gserviceaccount.com" mono />
+                        </div>
+                        <div className="min-w-0">
+                          <FieldLabel>Timezone</FieldLabel>
+                          <TextInput value={form.timezone} onChange={v => set('timezone', v)} placeholder="America/New_York" mono />
+                        </div>
+                        <div className="min-w-0">
+                          <FieldLabel>Currency</FieldLabel>
+                          <TextInput value={form.currency} onChange={v => set('currency', v)} placeholder="USD" mono />
+                        </div>
+
+                        <div className="responsive-col-span-2 min-w-0">
+                          <FieldLabel>
+                            Service account credentials JSON
+                            {form.credentials_json && ' (new value — leave blank to keep existing)'}
+                          </FieldLabel>
+                          <textarea
+                              value={form.credentials_json}
+                              onChange={e => set('credentials_json', e.target.value)}
+                              rows={6}
+                              placeholder={'{\n  "type": "service_account",\n  "client_email": "...",\n  "private_key": "..."\n}'}
+                              className="w-full box-border bg-[#1a1a1a] border border-[#3a3a3a] rounded-[8px] py-[10px] px-[12px] text-[#d1d1d1] text-[11px] outline-none font-mono resize-y leading-[1.6] transition-colors focus:border-[#10a37f]"
+                          />
+                          <p className="text-[11px] text-[#4a4a4a] mt-[4px] leading-[1.5] m-0 break-words">
+                            Grant <strong>Viewer</strong> access to the service account email in GA4 → Admin → Property access management.
+                            In production, use Supabase Vault instead of storing JSON directly.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Setup Checklist */}
+                    <div className="bg-[#2f2f2f] border border-[#3f3f3f] rounded-[12px] p-[16px] mb-[16px] min-w-0">
+                      <div className="text-[12px] font-medium text-[#ececec] mb-[12px]">Setup checklist</div>
+                      {[
+                        ['1', 'Create a service account', 'Google Cloud Console → IAM → Service Accounts → Create'],
+                        ['2', 'Download JSON key', 'Service Accounts → Keys → Add Key → JSON'],
+                        ['3', 'Grant GA4 access', 'GA4 Admin → Property access management → Add users → Viewer role'],
+                        ['4', 'Find property ID', 'GA4 Admin → Property → Property details → Property ID'],
+                        ['5', 'Paste credentials above', 'Paste the full service account JSON into the field above'],
+                      ].map(([num, title, desc]) => (
+                          <div key={num} className="flex gap-[10px] mb-[10px] pb-[10px] border-b border-[#2a2a2a] min-w-0">
+                            <span className="text-[10px] font-mono text-[#10a37f] bg-[#0d2e26] w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0">{num}</span>
+                            <div className="min-w-0 flex-1">
+                              {/* Using break-words prevents the list from truncating on smaller mobile screens */}
+                              <div className="text-[13px] text-[#d1d1d1] font-medium break-words leading-tight">{title}</div>
+                              <div className="text-[11px] text-[#4a4a4a] mt-[4px] break-words leading-snug">{desc}</div>
+                            </div>
+                          </div>
+                      ))}
+                    </div>
+
+                    {error && (
+                        <div className="py-[10px] px-[14px] bg-[#2a1515] border border-[#5a2020] rounded-[8px] text-[#f87171] text-[13px] font-mono mb-[12px] break-words">
+                          ⚠ {error}
+                        </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex justify-end gap-[8px] responsive-actions">
+                      <a href="/analytics" className="py-[8px] px-[16px] bg-transparent border border-[#3a3a3a] rounded-[7px] text-[#8e8ea0] text-[13px] no-underline flex items-center justify-center hover:text-[#ececec] transition-colors">
+                        ← Back to dashboard
+                      </a>
+                      <button
+                          onClick={handleSave}
+                          disabled={saving}
+                          className={`py-[8px] px-[22px] border-none rounded-[7px] text-white text-[13px] font-semibold flex items-center justify-center gap-[8px] font-inherit transition-colors ${
+                              saving ? 'bg-[#0a2420] cursor-wait' : 'bg-[#10a37f] cursor-pointer hover:bg-[#0e916f]'
+                          }`}
+                      >
+                        {saving ? (
+                            <><div className="w-[12px] h-[12px] rounded-full border-2 border-[rgba(255,255,255,0.3)] border-t-white animate-spin shrink-0" />Saving…</>
+                        ) : '✓ Save GA property'}
+                      </button>
+                    </div>
+                  </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </Layout>
+      </Layout>
   )
 }

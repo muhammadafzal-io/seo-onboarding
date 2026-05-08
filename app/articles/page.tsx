@@ -111,6 +111,7 @@ export default function ArticlesPage() {
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
+<<<<<<< Updated upstream
   const styles = {
     page: { minHeight: '100vh', background: '#212121', color: '#ececec', fontFamily: "'Instrument Sans', system-ui, sans-serif", padding: 24 },
     card: { background: '#2f2f2f', border: '1px solid #3f3f3f', borderRadius: 12, padding: 20 },
@@ -131,6 +132,43 @@ export default function ArticlesPage() {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
                   <a href="/dashboard" style={{ fontSize: 13, color: '#6b6b7b', textDecoration: 'none' }}>← Dashboard</a>
+=======
+  // Shared Table Classes
+  const thClass = "py-[8px] px-[12px] text-left text-[#6b6b7b] text-[11px] font-mono uppercase tracking-[0.06em] whitespace-nowrap"
+  const tdClass = "py-[10px] px-[12px] border-b border-[#2a2a2a] text-[#8e8ea0] text-[13px] whitespace-nowrap"
+
+  return (
+      <Layout title="Articles">
+        {/* HYBRID CSS OVERRIDES FOR MOBILE/TABLET */}
+        <style>{`
+          @media (max-width: 1023px) {
+            .responsive-page { padding: 16px !important; }
+          }
+          @media (max-width: 768px) {
+            .responsive-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+            .responsive-filters { gap: 8px !important; }
+            .responsive-search { flex-basis: 100% !important; margin-bottom: 4px !important; }
+            .table-wrapper { padding-bottom: 12px !important; }
+            .responsive-pagination { flex-direction: column !important; gap: 12px !important; align-items: center !important; }
+          }
+        `}</style>
+
+        <Card>
+          <div className="min-h-screen bg-[#212121] text-[#ececec] [font-family:'Instrument_Sans',system-ui,sans-serif] p-[24px] responsive-page">
+            <div className="max-w-[1200px] mx-auto">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-[20px] responsive-header">
+                <div>
+                  <div className="flex items-center gap-[12px] mb-[4px]">
+                    <a href="/dashboard" className="text-[13px] text-[#6b6b7b] no-underline hover:text-[#ececec] transition-colors">← Dashboard</a>
+                  </div>
+                  <h2 className="text-[20px] font-semibold text-[#ececec] tracking-[-0.02em] mb-[4px]">Articles</h2>
+                  <p className="text-[13px] text-[#8e8ea0] m-0">{total.toLocaleString()} total articles</p>
+                </div>
+                <div className="flex items-center gap-[6px] py-[5px] px-[12px] bg-[#0d2e26] border border-[#155e4a] rounded-[7px]">
+                  <div className="w-[6px] h-[6px] rounded-full bg-[#10a37f]" />
+                  <span className="text-[11px] text-[#10a37f] font-mono">Live updates</span>
+>>>>>>> Stashed changes
                 </div>
                 <h2 style={{ fontSize: 20, fontWeight: 600, color: '#ececec', letterSpacing: '-0.02em', marginBottom: 4 }}>Articles</h2>
                 <p style={{ fontSize: 13, color: '#8e8ea0' }}>{total.toLocaleString()} total articles</p>
@@ -160,6 +198,7 @@ export default function ArticlesPage() {
                 ))}
               </div>
 
+<<<<<<< Updated upstream
               {/* Table */}
               <div style={{ overflowX: 'auto' }}>
                 {loading ? (
@@ -205,6 +244,77 @@ export default function ArticlesPage() {
               {/* Pagination */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14, paddingTop: 12, borderTop: '1px solid #2a2a2a' }}>
                 <span style={{ fontSize: 11, color: '#6b6b7b', fontFamily: 'monospace' }}>
+=======
+              <div className="bg-[#2f2f2f] border border-[#3f3f3f] rounded-[12px] p-[20px]">
+                {/* Filters */}
+                <div className="flex gap-[8px] mb-[14px] flex-wrap responsive-filters">
+                  <input
+                      value={search}
+                      onChange={e => { setSearch(e.target.value); setPage(1) }}
+                      placeholder="Search keyword, title, or client name..."
+                      className="flex-1 min-w-[200px] bg-[#2a2a2a] border border-[#3f3f3f] rounded-[7px] py-[7px] px-[12px] text-[#ececec] text-[13px] outline-none font-inherit focus:border-[#10a37f] transition-colors responsive-search"
+                  />
+                  {STATUSES.map(s => (
+                      <button
+                          key={s}
+                          onClick={() => { setStatus(s); setPage(1) }}
+                          className={`py-[5px] px-[10px] rounded-[6px] border border-[#3f3f3f] text-[12px] cursor-pointer font-inherit transition-all duration-[120ms] hover:brightness-110 ${
+                              status === s
+                                  ? 'bg-[#0d2e26] text-[#10a37f]'
+                                  : 'bg-[#2a2a2a] text-[#8e8ea0]'
+                          }`}
+                      >
+                        {s}
+                      </button>
+                  ))}
+                </div>
+
+                {/* Table */}
+                <div className="overflow-x-auto table-wrapper">
+                  {loading ? (
+                      <div className="py-[48px] text-center text-[#6b6b7b] text-[13px]">Loading...</div>
+                  ) : articles.length === 0 ? (
+                      <div className="py-[48px] text-center text-[#6b6b7b] text-[13px]">
+                        {search || status !== 'All' ? 'No articles match your filters' : 'No articles yet — submit a client to start'}
+                      </div>
+                  ) : (
+                      <table className="w-full border-collapse">
+                        <thead>
+                        <tr className="border-b border-[#3f3f3f]">
+                          {['ID', 'Client', 'Keyword', 'Status', 'Words', 'Type', 'Updated', 'Link'].map(h => (
+                              <th key={h} className={thClass}>{h}</th>
+                          ))}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {articles.map(row => {
+                          const client = Array.isArray(row.clients) ? row.clients[0] : row.clients
+                          return (
+                              <tr key={row.id} className="cursor-default hover:bg-[#2a2a2a] transition-colors">
+                                <td className={`${tdClass} text-[#6b6b7b] font-mono text-[11px]`}>#{row.id}</td>
+                                <td className={`${tdClass} text-[#ececec] font-medium`}>{client?.name || client?.domain || '—'}</td>
+                                <td className={`${tdClass} max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap`}>{row.keyword}</td>
+                                <td className={tdClass}><Badge status={row.status} /></td>
+                                <td className={`${tdClass} font-mono text-[12px]`}>{(row.target_word_count || 0).toLocaleString()}</td>
+                                <td className={tdClass}>{row.content_type || '—'}</td>
+                                <td className={`${tdClass} font-mono text-[11px] text-[#6b6b7b]`}>{timeAgo(row.updated_at)}</td>
+                                <td className={tdClass}>
+                                  {row.wp_url && (
+                                      <a href={row.wp_url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-[#10a37f] no-underline font-mono hover:underline">↗ View</a>
+                                  )}
+                                </td>
+                              </tr>
+                          )
+                        })}
+                        </tbody>
+                      </table>
+                  )}
+                </div>
+
+                {/* Pagination */}
+                <div className="flex items-center justify-between mt-[14px] pt-[12px] border-t border-[#2a2a2a] responsive-pagination">
+                <span className="text-[11px] text-[#6b6b7b] font-mono">
+>>>>>>> Stashed changes
                   {total > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)} of ${total.toLocaleString()}` : '0 results'}
                 </span>
                 <div style={{ display: 'flex', gap: 4 }}>
