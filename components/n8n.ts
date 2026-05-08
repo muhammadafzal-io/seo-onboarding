@@ -30,7 +30,6 @@ export async function createClientAction(fd: FormData) {
     if (error) {
       return { success: false, error: error.message }
     }
-
     // 2️⃣ Trigger n8n WF1 webhook
     try {
       await fetch(process.env.NEXT_PUBLIC_N8N_WEBHOOK!, {

@@ -1,10 +1,5 @@
+import { redirect } from "next/navigation"
 
-import OnboardingForm from "../components/OnboardingForm"
-import { submitOnboarding } from "./action"
-
-
-
-
-export default async function Home() {
-  return <OnboardingForm action={submitOnboarding} />
+export default function Home() {
+  redirect("/onboarding")
 }

@@ -16,8 +16,8 @@ export default function Sidebar({ open }: { open: boolean }) {
   const path = usePathname()
 
   return (
-    <aside style={{
-      width: 220, background: 'var(--sb)', borderRight: '1px solid var(--border2)',
+    <aside className="bg-green-600" style={{
+      width: 220, borderRight: '1px solid var(--border2)',
       display: 'flex', flexDirection: 'column', padding: '20px 12px',
       position: 'fixed', top: 0, left: 0, bottom: 0, overflowY: 'auto', zIndex: 100,
     }}>
@@ -25,7 +25,7 @@ export default function Sidebar({ open }: { open: boolean }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 4px', marginBottom: 28 }}>
         <div style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--acc)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>✦</div>
         <div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--t1)', letterSpacing: '-0.01em' }}>The Brief</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--t1)', letterSpacing: '-0.01em' }}>The Brief........</div>
           <div style={{ fontSize: 9, color: 'var(--t3)', fontFamily: 'var(--mono)', letterSpacing: '0.1em' }}>SEO PLATFORM</div>
         </div>
       </div>
