@@ -244,7 +244,7 @@ export default function ArticleReviewClient({ data }: { data: ReviewData }) {
                 {isPublished && article.wp_url && (
                   <a href={article.wp_url} target="_blank" rel="noopener noreferrer"
                     style={{ fontSize: 11, color: '#10a37f', fontFamily: 'monospace' }}>
-                    ↗ View live
+                    ↗  View live
                   </a>
                 )}
               </div>

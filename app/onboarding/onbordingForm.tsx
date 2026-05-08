@@ -33,8 +33,8 @@ const INIT: FormState = {
 }
 
 export default function OnboardingForm({
-    action,
-}: {
+                                           action,
+                                       }: {
     action: (fd: FormData) => Promise<{ success: boolean; error?: string }>
 }) {
     const [form, setForm] = useState<FormState>(INIT)
@@ -96,7 +96,7 @@ export default function OnboardingForm({
           --muted:    #8e8ea0; --muted-2:  #6b6b7b; --rule:     #3f3f3f;
           --rule-2:   #2a2a2a; --surface:  #212121; --sidebar:  #171717;
           --card:     #2f2f2f; --warm:     #1e1e1e; --accent:   #10a37f;
-          -- gold:     #10a37f; --violet:   #10a37f; --violet-l: #0d2e26;
+          --gold:     #10a37f; --violet:   #10a37f; --violet-l: #0d2e26;
           --sans:     'Instrument Sans', sans-serif; --serif: 'Fraunces', serif; --mono: 'DM Mono', monospace;
         }
         .inp { width: 100%; padding: 9px 12px; background: var(--card); border: 1px solid var(--rule); border-radius: 8px; font-size: 14px; color: var(--ink); outline: none; font-family: var(--sans); transition: border-color .15s, box-shadow .15s; }
@@ -114,12 +114,29 @@ export default function OnboardingForm({
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
         .pulse { animation: pulse 2s infinite; }
         @keyframes dotBounce { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-4px); } }
+
+        
+        @media (max-width: 1024px) {
+          .layout-container { flex-direction: column !important; gap: 24px !important; }
+          .summary-sidebar { width: 100% !important; padding: 0 !important; position: static !important; }
+          .form-content { max-width: 100% !important; }
+        }
+        @media (max-width: 768px) {
+          .grid-2 { grid-template-columns: 1fr !important; }
+          .grid-4-responsive { grid-template-columns: repeat(2, 1fr) !important; }
+          .responsive-header { padding: 12px 16px !important; margin: 0 -16px 20px !important; flex-wrap: wrap !important; gap: 12px !important; }
+          .section-card { padding: 20px !important; }
+        }
+        @media (max-width: 480px) {
+          .grid-4-responsive { grid-template-columns: 1fr !important; }
+          .responsive-header { margin: 0 -12px 20px !important; border-radius: 0 !important; }
+        }
       ` }} />
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
 
-                {/* ── SUB HEADER (Within Content) ── */}
-                <header style={{ background: 'rgba(33,33,33,0.95)', backdropFilter: 'blur(16px)', borderBottom: '1px solid #2a2a2a', position: 'sticky', top: -24, zIndex: 30, margin: '0 -24px 24px', padding: '12px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+
+                <header className="responsive-header" style={{ background: 'rgba(33,33,33,0.95)', backdropFilter: 'blur(16px)', borderBottom: '1px solid #2a2a2a', position: 'sticky', top: -24, zIndex: 30, margin: '0 -24px 24px', padding: '12px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
                         <h1 style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', letterSpacing: '-0.01em' }}>Client Onboarding</h1>
                         <p style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'var(--mono)' }}>Set up content automation pipeline</p>
@@ -135,9 +152,11 @@ export default function OnboardingForm({
                     </div>
                 </header>
 
-                <div style={{ display: 'flex', gap: 0 }}>
+
+                <div className="layout-container" style={{ display: 'flex', gap: 0 }}>
                     {/* ── FORM CONTENT ── */}
-                    <div style={{ flex: 1, maxWidth: 800 }}>
+
+                    <div className="form-content" style={{ flex: 1, maxWidth: 800 }}>
                         <div style={{ marginBottom: 28 }}>
                             <h2 style={{ fontFamily: 'var(--serif)', fontSize: 28, fontWeight: 300, color: 'var(--ink)', letterSpacing: '-0.025em' }}>New Client Setup</h2>
                             <p style={{ fontSize: 14, color: 'var(--muted)' }}>Fill in details to configure AI content pipeline. All fields marked * are required.</p>
@@ -262,7 +281,8 @@ export default function OnboardingForm({
                                 </Field>
 
                                 <Field label="Publishing Frequency" required error={errors.schedule} hint="How often should new articles be published?">
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 6 }}>
+                                    {/* Added grid-4-responsive class */}
+                                    <div className="grid-4-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 6 }}>
                                         {SCHEDULES.map(s => (
                                             <button
                                                 key={s} type="button"
@@ -300,7 +320,8 @@ export default function OnboardingForm({
                     </div>
 
                     {/* ── RIGHT SUMMARY PANEL ── */}
-                    <aside style={{ width: 280, flexShrink: 0, padding: '0 0 0 24px', position: 'sticky', top: 180, height: 'fit-content' }}>
+
+                    <aside className="summary-sidebar" style={{ width: 280, flexShrink: 0, padding: '0 0 0 24px', position: 'sticky', top: 180, height: 'fit-content' }}>
                         <div style={{ background: 'var(--card)', border: '1px solid var(--rule)', borderRadius: 14, overflow: 'hidden' }}>
                             <div style={{ background: '#171717', padding: '16px 20px' }}>
                                 <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', marginBottom: 6 }}>Pipeline Summary</p>
@@ -309,7 +330,7 @@ export default function OnboardingForm({
                             <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                                 {[{ label: 'Keywords', value: kwCount > 0 ? `${kwCount} queued` : '—' }, { label: 'Niche', value: form.niche || '—' }, { label: 'Tone', value: form.tone || '—' }, { label: 'Frequency', value: form.schedule || '—' }].map(row => (
                                     <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-                                        <span style={{ color: 'var(--muted)', fontFamily: 'var(--mono)' }}>{row.label}</span>
+                                        <span style={{ color: 'var(--muted)', fontFamily: 'var(--mono)', flex: 1 }}>{row.label}</span>
                                         <span style={{ color: '#ececec', fontWeight: 500 }}>{row.value}</span>
                                     </div>
                                 ))}
@@ -318,10 +339,10 @@ export default function OnboardingForm({
 
                         <div style={{
                             background: '#0d2e26',
-                            border: '1px solid #ddd6fe',
+                            border: '1px solid #10a37f', // Changed from #ddd6fe to match theme
                             borderRadius: 12,
                             padding: '16px 18px',
-                            marginTop: '30px'
+                            marginTop: '20px' // Slightly adjusted for better mobile spacing
                         }}>
                             <p style={{ fontSize: 12, fontWeight: 600, color: '#10a37f', marginBottom: 10, fontFamily: 'var(--mono)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                                 What happens next

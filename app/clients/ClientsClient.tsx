@@ -100,6 +100,7 @@ function ClientModal({ state, onClose, onSave }: {
   const F = ({ label, field, placeholder, type = 'text', half = false }: {
     label: string; field: keyof Client; placeholder?: string; type?: string; half?: boolean
   }) => (
+<<<<<<< Updated upstream
     <div style={{ gridColumn: half ? 'span 1' : 'span 2' }}>
       <label style={{ display: 'block', fontSize: 10, color: '#6b6b7b', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 5 }}>{label}</label>
       <input type={type} value={(form[field] as string) || ''} onChange={e => set(field, e.target.value)} placeholder={placeholder}
@@ -118,6 +119,24 @@ function ClientModal({ state, onClose, onSave }: {
         {options.map(o => <option key={o} value={o.toLowerCase()}>{o}</option>)}
       </select>
     </div>
+=======
+      <div className={`${half ? "col-span-1" : "col-span-2"} responsive-modal-col`}>
+        <label className="block text-[10px] text-[#6b6b7b] font-mono uppercase tracking-[0.07em] mb-[5px]">{label}</label>
+        <input type={type} value={(form[field] as string) || ''} onChange={e => set(field, e.target.value)} placeholder={placeholder}
+               className="w-full bg-[#262626] border border-[#3a3a3a] rounded-[7px] py-[8px] px-[10px] text-[#ececec] text-[13px] outline-none font-inherit box-border transition-colors focus:border-[#10a37f]"
+        />
+      </div>
+  )
+
+  const S = ({ label, field, options }: { label: string; field: keyof Client; options: string[] }) => (
+      <div className="responsive-modal-col">
+        <label className="block text-[10px] text-[#6b6b7b] font-mono uppercase tracking-[0.07em] mb-[5px]">{label}</label>
+        <select value={(form[field] as string) || ''} onChange={e => set(field, e.target.value)}
+                className="w-full bg-[#262626] border border-[#3a3a3a] rounded-[7px] py-[8px] px-[10px] text-[#ececec] text-[13px] outline-none font-inherit">
+          {options.map(o => <option key={o} value={o.toLowerCase()}>{o}</option>)}
+        </select>
+      </div>
+>>>>>>> Stashed changes
   )
 
   return (
@@ -138,6 +157,7 @@ function ClientModal({ state, onClose, onSave }: {
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#6b6b7b', cursor: 'pointer', fontSize: 20, padding: 4, lineHeight: 1 }}>✕</button>
         </div>
 
+<<<<<<< Updated upstream
         {/* Form */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <F label="Client Name" field="name" placeholder="Acme Corp" half />
@@ -155,6 +175,36 @@ function ClientModal({ state, onClose, onSave }: {
               onFocus={e => (e.currentTarget.style.borderColor = '#10a37f')}
               onBlur={e => (e.currentTarget.style.borderColor = '#3a3a3a')}
             />
+=======
+          {/* Form */}
+          <div className="flex-1 overflow-y-auto py-[20px] px-[24px] grid grid-cols-2 gap-[14px] responsive-modal-grid">
+            <F label="Client Name" field="name" placeholder="Acme Corp" half />
+            <F label="Email" field="email" placeholder="client@example.com" type="email" half />
+            <F label="Domain" field="domain" placeholder="acme.com" half />
+            <F label="Niche" field="niche" placeholder="Tech, Health, Finance..." half />
+            <S label="Tone" field="tone" options={['Professional', 'Casual', 'Expert', 'Friendly', 'Authoritative']} />
+            <S label="Schedule" field="schedule" options={['Daily', 'Weekly', 'Biweekly', 'Monthly']} />
+            <S label="Platform" field="publish_platform" options={['WordPress', 'Shopify', 'Webflow', 'Ghost', 'Custom']} />
+            <F label="Publish URL" field="publish_url" placeholder="https://acme.com/wp-json/wp/v2" half />
+            <div className="col-span-2 responsive-modal-col">
+              <label className="block text-[10px] text-[#6b6b7b] font-mono uppercase tracking-[0.07em] mb-[5px]">Notes</label>
+              <textarea value={form.notes || ''} onChange={e => set('notes', e.target.value)} rows={3} placeholder="Optional notes about this client..."
+                        className="w-full bg-[#262626] border border-[#3a3a3a] rounded-[7px] py-[8px] px-[10px] text-[#ececec] text-[13px] outline-none font-inherit resize-y box-border transition-colors focus:border-[#10a37f]"
+              />
+            </div>
+          </div>
+
+          {/* Footer */}
+          {error && <div className="py-[8px] px-[24px] bg-[#2a1515] border-t border-[#5a2020] text-[#f87171] text-[12px] font-mono">⚠ {error}</div>}
+          <div className="py-[14px] px-[24px] border-t border-[#3a3a3a] flex justify-end gap-[8px]">
+            <button onClick={onClose} className="py-[8px] px-[16px] bg-transparent border border-[#3f3f3f] rounded-[7px] text-[#8e8ea0] text-[13px] cursor-pointer font-inherit hover:text-[#ececec] transition-colors">Cancel</button>
+            <button onClick={handleSave} disabled={loading}
+                    className={`py-[8px] px-[20px] border-none rounded-[7px] text-white text-[13px] font-semibold flex items-center gap-[8px] font-inherit transition-colors ${loading ? 'bg-[#0a2420] cursor-wait' : 'bg-[#10a37f] cursor-pointer hover:bg-[#0e916f]'}`}>
+              {loading
+                  ? <><div className="w-[12px] h-[12px] rounded-full border-2 border-white/30 border-t-white animate-spin" />Saving...</>
+                  : state.mode === 'add' ? '+ Add Client' : '✓ Save Changes'}
+            </button>
+>>>>>>> Stashed changes
           </div>
         </div>
 
@@ -259,6 +309,7 @@ export default function ClientsClient({ initialClients }: { initialClients: Clie
   const td: React.CSSProperties = { padding: '12px 14px', borderBottom: '1px solid #2a2a2a', fontSize: 13, verticalAlign: 'middle' as const }
 
   return (
+<<<<<<< Updated upstream
     <Layout title="Clients">
       {modal.open && (
         <ClientModal state={modal} onClose={() => setModal({ open: false, mode: 'add', client: null })} onSave={handleSave} />
@@ -266,6 +317,37 @@ export default function ClientsClient({ initialClients }: { initialClients: Clie
       {deleting && (
         <DeleteModal client={deleting} onClose={() => setDeleting(null)} onConfirm={() => handleDelete(deleting)} />
       )}
+=======
+      <Layout title="Clients">
+        {/* HYBRID CSS OVERRIDES FOR MOBILE/TABLET */}
+        <style>{`
+          /* Tablet & Mobile Tweaks */
+          @media (max-width: 1023px) {
+            .responsive-page { padding: 16px !important; }
+            .table-wrapper { overflow-x: auto !important; }
+          }
+          @media (max-width: 768px) {
+            .responsive-kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+            .responsive-toolbar-search { flex-basis: 100% !important; }
+            .responsive-modal-grid { grid-template-columns: 1fr !important; }
+            .responsive-modal-col { grid-column: span 1 !important; }
+            .responsive-header { flex-wrap: wrap !important; gap: 12px !important; }
+          }
+          @media (max-width: 480px) {
+            /* Force single column for cards on tiny screens */
+            .responsive-card-grid { grid-template-columns: 1fr !important; }
+            /* Keep 2 columns for KPIs so it remains compact */
+            .responsive-kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          }
+        `}</style>
+
+        {modal.open && (
+            <ClientModal state={modal} onClose={() => setModal({ open: false, mode: 'add', client: null })} onSave={handleSave} />
+        )}
+        {deleting && (
+            <DeleteModal client={deleting} onClose={() => setDeleting(null)} onConfirm={() => handleDelete(deleting)} />
+        )}
+>>>>>>> Stashed changes
 
       {/* Toast */}
       {toast && (
@@ -292,6 +374,7 @@ export default function ClientsClient({ initialClients }: { initialClients: Clie
             </button>
           </div>
 
+<<<<<<< Updated upstream
           {/* ── KPI row ── */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
             {[
@@ -303,6 +386,20 @@ export default function ClientsClient({ initialClients }: { initialClients: Clie
               <div key={k.label} style={{ background: '#2f2f2f', border: '1px solid #3f3f3f', borderRadius: 10, padding: '14px 16px' }}>
                 <div style={{ fontSize: 10, color: '#6b6b7b', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{k.label}</div>
                 <div style={{ fontSize: 28, fontWeight: 700, color: k.color, letterSpacing: '-0.04em', lineHeight: 1 }}>{k.value}</div>
+=======
+
+        <div className="min-h-screen bg-[#212121] text-[#ececec] py-[28px] pr-[28px] pl-[8px] responsive-page [font-family:'Instrument_Sans',system-ui,sans-serif]">
+          <div className="max-w-[1200px] mx-auto">
+
+            {/* ── Page header ── */}
+
+            <div className="flex items-start justify-between mb-[24px] responsive-header">
+              <div>
+                <h1 className="text-[24px] font-bold text-[#ececec] tracking-[-0.03em] m-0 mb-[4px]">Clients</h1>
+                <p className="text-[13px] text-[#6b6b7b] m-0">
+                  {clients.length} client{clients.length !== 1 ? 's' : ''} · {totals.articles} total articles
+                </p>
+>>>>>>> Stashed changes
               </div>
             ))}
           </div>
@@ -321,6 +418,7 @@ export default function ClientsClient({ initialClients }: { initialClients: Clie
               />
             </div>
 
+<<<<<<< Updated upstream
             {/* Niche filter */}
             <select value={filterNiche} onChange={e => setFilterNiche(e.target.value)}
               style={{ background: '#2f2f2f', border: '1px solid #3a3a3a', borderRadius: 8, padding: '9px 12px', color: '#8e8ea0', fontSize: 13, outline: 'none', fontFamily: 'inherit', cursor: 'pointer' }}>
@@ -338,6 +436,54 @@ export default function ClientsClient({ initialClients }: { initialClients: Clie
             </div>
 
             <span style={{ fontSize: 12, color: '#4a4a4a', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+=======
+            {/* ── KPI row ── */}
+
+            <div className="grid grid-cols-4 gap-[10px] mb-[24px] responsive-kpi-grid">
+              {[
+                { label: 'Total Clients', value: totals.clients, color: '#ececec' },
+                { label: 'Total Articles', value: totals.articles, color: '#60a5fa' },
+                { label: 'Published', value: totals.published, color: '#10a37f' },
+                { label: 'In Pipeline', value: totals.pipeline, color: '#f59e0b' },
+              ].map(k => (
+                  <div key={k.label} className="bg-[#2f2f2f] border border-[#3f3f3f] rounded-[10px] py-[14px] px-[16px]">
+                    <div className="text-[10px] text-[#6b6b7b] font-mono uppercase tracking-[0.08em] mb-[6px]">{k.label}</div>
+                    <div className="text-[28px] font-bold tracking-[-0.04em] leading-none" style={{ color: k.color }}>{k.value}</div>
+                  </div>
+              ))}
+            </div>
+
+            {/* ── Toolbar ── */}
+            <div className="flex gap-[10px] mb-[20px] flex-wrap items-center">
+              {/* Search */}
+
+              <div className="relative flex-auto basis-[240px] responsive-toolbar-search">
+                <span className="absolute left-[10px] top-1/2 -translate-y-1/2 text-[13px] text-[#4a4a4a] pointer-events-none">⌕</span>
+                <input
+                    value={search} onChange={e => setSearch(e.target.value)}
+                    placeholder="Search clients by name, domain, niche..."
+                    className="w-full bg-[#2f2f2f] border border-[#3a3a3a] rounded-[8px] py-[9px] pr-[12px] pl-[30px] text-[#ececec] text-[13px] outline-none font-inherit box-border transition-colors focus:border-[#10a37f]"
+                />
+              </div>
+
+              {/* Niche filter */}
+              <select value={filterNiche} onChange={e => setFilterNiche(e.target.value)}
+                      className="bg-[#2f2f2f] border border-[#3a3a3a] rounded-[8px] py-[9px] px-[12px] text-[#8e8ea0] text-[13px] outline-none font-inherit cursor-pointer focus:border-[#10a37f] transition-colors">
+                {niches.map(n => <option key={n} value={n}>{n === 'all' ? 'All niches' : n}</option>)}
+              </select>
+
+              {/* View toggle */}
+              <div className="flex bg-[#2f2f2f] border border-[#3a3a3a] rounded-[8px] overflow-hidden">
+                {(['grid', 'table'] as const).map(v => (
+                    <button key={v} onClick={() => setView(v)}
+                            className={`py-[8px] px-[14px] border-none text-[12px] cursor-pointer font-inherit transition-colors ${view === v ? 'bg-[#3a3a3a] text-[#ececec] font-semibold' : 'bg-transparent text-[#6b6b7b] font-normal hover:text-[#ececec]'}`}>
+                      {v === 'grid' ? '⊞ Grid' : '≡ Table'}
+                    </button>
+                ))}
+              </div>
+
+              <span className="text-[12px] text-[#4a4a4a] font-mono whitespace-nowrap">
+>>>>>>> Stashed changes
               {filtered.length} of {clients.length}
             </span>
           </div>
@@ -397,6 +543,7 @@ export default function ClientsClient({ initialClients }: { initialClients: Clie
                       </div>
                     </div>
 
+<<<<<<< Updated upstream
                     {/* Meta row */}
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {c.tone && (
@@ -461,6 +608,12 @@ export default function ClientsClient({ initialClients }: { initialClients: Clie
                   </tr>
                 </thead>
                 <tbody>
+=======
+            {/* ── GRID VIEW ── */}
+
+            {view === 'grid' && filtered.length > 0 && (
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-[14px] responsive-card-grid">
+>>>>>>> Stashed changes
                   {filtered.map(c => {
                     const ini = initials(c.name, c.domain)
                     const nc = nicheColor(c.niche)
@@ -532,6 +685,99 @@ export default function ClientsClient({ initialClients }: { initialClients: Clie
             </div>
           )}
 
+<<<<<<< Updated upstream
+=======
+            {/* ── TABLE VIEW ── */}
+
+            {view === 'table' && filtered.length > 0 && (
+                <div className="bg-[#2f2f2f] border border-[#3f3f3f] rounded-[12px] overflow-hidden table-wrapper">
+                  <table className="w-full border-collapse">
+                    <thead>
+                    <tr>
+                      <th className={`${thClasses} pl-[20px]`}>Client</th>
+                      <th className={thClasses}>Niche</th>
+                      <th className={thClasses}>Platform</th>
+                      <th className={`${thClasses} text-right`}>Articles</th>
+                      <th className={`${thClasses} text-right`}>Published</th>
+                      <th className={`${thClasses} text-right`}>Pipeline</th>
+                      <th className={`${thClasses} text-center`}>Schedule</th>
+                      <th className={`${thClasses} text-right`}>Added</th>
+                      <th className={`${thClasses} text-right pr-[20px]`}>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {filtered.map(c => {
+                      const ini = initials(c.name, c.domain)
+                      const nc = nicheColor(c.niche)
+                      return (
+                          <tr key={c.id} className="transition-colors hover:bg-[#2a2a2a]">
+                            {/* Client */}
+                            <td className={`${tdClasses} pl-[20px]`}>
+                              <div className="flex items-center gap-[10px]">
+                                <div className="w-[32px] h-[32px] rounded-[8px] border flex items-center justify-center text-[12px] font-bold shrink-0"
+                                     style={{ background: `${nc}22`, borderColor: `${nc}44`, color: nc }}>
+                                  {ini}
+                                </div>
+                                <div>
+                                  <div className="text-[13px] font-semibold text-[#ececec]">{c.name || c.domain}</div>
+                                  {c.domain && c.name && <div className="text-[11px] text-[#4a4a4a] font-mono">{c.domain}</div>}
+                                </div>
+                              </div>
+                            </td>
+                            <td className={tdClasses}>
+                          <span className="text-[11px] py-[2px] px-[7px] rounded-[4px] font-mono"
+                                style={{ color: nc, background: `${nc}22` }}>
+                            {c.niche || 'General'}
+                          </span>
+                            </td>
+                            <td className={`${tdClasses} text-[#8e8ea0] font-mono text-[12px]`}>
+                              {c.publish_platform || '—'}
+                            </td>
+                            <td className={`${tdClasses} text-right font-mono text-[#ececec] font-semibold`}>
+                              {c.stats.total}
+                            </td>
+                            <td className={`${tdClasses} text-right font-mono text-[#10a37f]`}>
+                              {c.stats.published}
+                            </td>
+                            <td className={`${tdClasses} text-right font-mono text-[#f59e0b]`}>
+                              {c.stats.inPipeline}
+                            </td>
+                            <td className={`${tdClasses} text-center`}>
+                              <span className="text-[11px] text-[#8e8ea0] font-mono">{c.schedule || '—'}</span>
+                            </td>
+                            <td className={`${tdClasses} text-right text-[#4a4a4a] font-mono text-[11px]`}>
+                              {timeAgo(c.created_at)}
+                            </td>
+                            <td className={`${tdClasses} text-right pr-[20px]`}>
+                              <div className="flex gap-[6px] justify-end">
+                                <a href={`/client/${c.id}`}
+                                   className="py-[4px] px-[10px] bg-[#2a2a2a] border border-[#3a3a3a] rounded-[5px] text-[#8e8ea0] text-[11px] no-underline font-inherit hover:bg-[#333] transition-colors">
+                                  View
+                                </a>
+                                <a href={`/articles?clientId=${c.id}`}
+                                   className="py-[4px] px-[10px] bg-[#2a2a2a] border border-[#3a3a3a] rounded-[5px] text-[#8e8ea0] text-[11px] no-underline font-inherit hover:bg-[#333] transition-colors">
+                                  Articles
+                                </a>
+                                <button onClick={() => setModal({ open: true, mode: 'edit', client: c })}
+                                        className="py-[4px] px-[10px] bg-[#2a2a2a] border border-[#3a3a3a] rounded-[5px] text-[#8e8ea0] text-[11px] cursor-pointer font-inherit hover:bg-[#333] transition-colors">
+                                  Edit
+                                </button>
+                                <button onClick={() => setDeleting(c)}
+                                        className="py-[4px] px-[10px] bg-transparent border border-[#3a3a3a] rounded-[5px] text-[#6b6b7b] text-[11px] cursor-pointer font-inherit hover:bg-[#2a2a2a] hover:text-[#f87171] transition-colors">
+                                  Del
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                      )
+                    })}
+                    </tbody>
+                  </table>
+                </div>
+            )}
+
+          </div>
+>>>>>>> Stashed changes
         </div>
       </div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
